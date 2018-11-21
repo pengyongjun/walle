@@ -13,7 +13,7 @@ public class WalleApplication {
         SpringApplication.run(WalleApplication.class, args);
         WebCamera webCamera = new WebCamera();
 //        new WebCamera().saveVideoStream();
-//        new WebCamera().getVideoStream();
-        webCamera.testGetPicFromVideo();
+        new WebCamera().getVideoStream();
+//        webCamera.testGetPicFromVideo();
     }
 }

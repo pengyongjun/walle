@@ -34,7 +34,7 @@ public class WebCamera {
 
         int count = 0;
 
-        while (frame != null && count < 100) {
+        while (frame != null && count < 10) {
             logger.info(String.valueOf(frame.timestamp));
 
             BufferedImage bufferedImage = converter.convert(frame);
@@ -77,7 +77,7 @@ public class WebCamera {
     public void saveVideoStream() throws IOException {
         ServerSocket cameraSS = new ServerSocket(3333);
 
-        Socket cameraSocket = null;
+        Socket cameraSocket;
 
         while (true) {
             cameraSocket = cameraSS.accept();
@@ -100,18 +100,30 @@ public class WebCamera {
         ServerSocket cameraSS = new ServerSocket(3333);
         ServerSocket viewSS = new ServerSocket(4444);
 
-        Socket cameraSocket = null;
-        Socket viewSocket = null;
+        Socket cameraSocket;
+        Socket viewSocket;
 
         cameraSocket = cameraSS.accept();
 
         while (true) {
             viewSocket = viewSS.accept();
+
             logger.info("---------web connected------");
 
-            // 从raspi的视频流中获取一帧
+            // 从rasp的视频流中获取一帧
             InputStream cameraIS = cameraSocket.getInputStream();
-            byte[] frame = new byte[640 * 480];
+            FFmpegFrameGrabber frameGrabber = new FFmpegFrameGrabber(cameraIS);
+
+            frameGrabber.setFrameRate(100);
+            frameGrabber.setFormat("h264");
+            frameGrabber.setVideoBitrate(15);
+            frameGrabber.setVideoOption("preset", "ultrafast");
+            frameGrabber.setNumBuffers(25000000);
+
+            Java2DFrameConverter converter = new Java2DFrameConverter();
+
+            frameGrabber.start();
+            Frame frame = frameGrabber.grab();
 
             OutputStream viewOS = viewSocket.getOutputStream();
             viewOS.write(("HTTP/1.0 200 OK\r\n" + "Server: walle\r\n" + "Connection: close\r\n" + "Max-Age: 0\r\n" + "Expires: 0\r\n"
@@ -119,20 +131,26 @@ public class WebCamera {
                     + "Content-Type: multipart/x-mixed-replace; " + "boundary=--BoundaryString\r\n\r\n").getBytes());
 
 
-            int count = cameraIS.read(frame);
-            while (count != -1) {
-                viewOS.write(("--BoundaryString\r\n" + "Content-type: image/jpg\r\n" + "Content-Length: " + frame.length + "\r\n\r\n").getBytes());
+            while (frame != null) {
+                BufferedImage image = converter.convert(frame);
+                ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
 
+                ImageIO.write(image, "jpg", byteArrayOutputStream);
+                byteArrayOutputStream.flush();
+                byte [] imageInByte = byteArrayOutputStream.toByteArray();
+                byteArrayOutputStream.close();
+
+                viewOS.write(("--BoundaryString\r\n" + "Content-type: image/jpg\r\n" + "Content-Length: " + imageInByte.length + "\r\n\r\n").getBytes());
                 viewOS.write(("--BoundaryString\r\n").getBytes());
 
-                viewOS.write(frame);
+                viewOS.write(imageInByte);
 
                 viewOS.write(("--BoundaryString\r\n").getBytes());
                 viewOS.write("\r\n\r\n".getBytes());
 
                 viewOS.flush();
 
-                count = cameraIS.read(frame);
+                frame = frameGrabber.grab();
             }
         }
     }
