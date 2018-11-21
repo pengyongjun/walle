@@ -18,6 +18,37 @@ import java.util.Arrays;
 public class WebCamera {
     private static final Logger logger = LoggerFactory.getLogger(WebCamera.class);
 
+    public void testGetPicFromVideo() throws IOException {
+        FFmpegFrameGrabber frameGrabber = new FFmpegFrameGrabber(new File(System.getProperty("user.dir") + "/test.mp4"));
+
+        frameGrabber.setFrameRate(100);
+        frameGrabber.setFormat("h264");
+        frameGrabber.setVideoBitrate(15);
+        frameGrabber.setVideoOption("preset", "ultrafast");
+        frameGrabber.setNumBuffers(25000000);
+
+        Java2DFrameConverter converter = new Java2DFrameConverter();
+
+        frameGrabber.start();
+        Frame frame = frameGrabber.grab();
+
+        int count = 0;
+
+        while (frame != null && count < 100) {
+            logger.info(String.valueOf(frame.timestamp));
+
+            BufferedImage bufferedImage = converter.convert(frame);
+
+            if (bufferedImage != null) {
+                File file = new File(System.getProperty("user.dir") + "/temp/image_" + count + ".jpg");
+                ImageIO.write(bufferedImage, "jpg", file);
+            }
+            count++;
+
+            frame = frameGrabber.grab();
+        }
+    }
+
     public void videoStreamToPic() throws IOException {
         ServerSocket cameraSS = new ServerSocket(3333);
 
@@ -32,9 +63,9 @@ public class WebCamera {
             Java2DFrameConverter converter = new Java2DFrameConverter();
             Frame frame = frameGrabber.grab();
 
-            if (frame != null){
+            if (frame != null) {
                 BufferedImage bufferedImage = converter.convert(frame);
-                if (bufferedImage != null){
+                if (bufferedImage != null) {
                     logger.info(Arrays.toString(bufferedImage.getPropertyNames()));
                     File file = new File(System.getProperty("user.dir") + "image.jpg");
                     ImageIO.write(bufferedImage, "jpg", file);
@@ -86,7 +117,6 @@ public class WebCamera {
             viewOS.write(("HTTP/1.0 200 OK\r\n" + "Server: walle\r\n" + "Connection: close\r\n" + "Max-Age: 0\r\n" + "Expires: 0\r\n"
                     + "Cache-Control: no-cache, private\r\n" + "Pragma: no-cache\r\n" + "Access-Control-Allow-Origin: *\r\n"
                     + "Content-Type: multipart/x-mixed-replace; " + "boundary=--BoundaryString\r\n\r\n").getBytes());
-
 
 
             int count = cameraIS.read(frame);

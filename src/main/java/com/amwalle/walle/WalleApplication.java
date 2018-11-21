@@ -14,6 +14,6 @@ public class WalleApplication {
         WebCamera webCamera = new WebCamera();
 //        new WebCamera().saveVideoStream();
 //        new WebCamera().getVideoStream();
-        webCamera.videoStreamToPic();
+        webCamera.testGetPicFromVideo();
     }
 }
