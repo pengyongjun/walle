@@ -1,5 +1,6 @@
 package com.amwalle.walle.raspi.camera;
 
+import org.apache.catalina.Server;
 import org.bytedeco.javacv.FFmpegFrameGrabber;
 import org.bytedeco.javacv.Frame;
 import org.bytedeco.javacv.Java2DFrameConverter;
@@ -19,7 +20,71 @@ import java.util.Arrays;
 public class WebCamera {
     private static final Logger logger = LoggerFactory.getLogger(WebCamera.class);
 
-    public void testForwardPic() throws IOException, InterruptedException {
+    public void forwardVideoStream() throws IOException {
+        ServerSocket cameraSS = new ServerSocket(3333);
+        ServerSocket viewSS = new ServerSocket(4444);
+
+        while (true) {
+            Socket cameraSocket = cameraSS.accept();
+            Socket viewSocket = viewSS.accept();
+
+            InputStream videoStream = cameraSocket.getInputStream();
+
+            FFmpegFrameGrabber frameGrabber = new FFmpegFrameGrabber(videoStream);
+
+            frameGrabber.setFrameRate(100);
+            frameGrabber.setFormat("h264");
+            frameGrabber.setVideoBitrate(15);
+            frameGrabber.setVideoOption("preset", "ultrafast");
+            frameGrabber.setNumBuffers(25000000);
+
+            frameGrabber.start();
+
+            DataOutputStream dataOutputStream = new DataOutputStream(viewSocket.getOutputStream());
+
+            dataOutputStream.write(("HTTP/1.0 200 OK\r\n" + "Server: YourServerName\r\n" + "Connection: close\r\n" + "Max-Age: 0\r\n" + "Expires: 0\r\n"
+                    + "Cache-Control: no-cache, private\r\n" + "Pragma: no-cache\r\n" + "Content-Type: multipart/x-mixed-replace; "
+                    + "boundary=--BoundaryString\r\n\r\n").getBytes());
+
+            Frame frame = frameGrabber.grab();
+
+            Java2DFrameConverter converter = new Java2DFrameConverter();
+            int count = 0;
+
+            while (frame != null) {
+
+                logger.info(String.valueOf("number: " + count));
+
+                ByteArrayOutputStream baos = new ByteArrayOutputStream();
+
+                BufferedImage bufferedImage = converter.convert(frame);
+                ImageIO.write(bufferedImage, "jpg", baos);
+                baos.flush();
+                baos.close();
+
+                byte[] imageInByte = baos.toByteArray();
+
+                dataOutputStream.write(("--BoundaryString" + "\r\n").getBytes());
+                dataOutputStream.write(("Content-Type: image/jpg" + "\r\n").getBytes());
+
+
+                dataOutputStream.write(("Content-Length: " + imageInByte.length + "\r\n\r\n").getBytes());
+                dataOutputStream.write(imageInByte);
+                dataOutputStream.write(("\r\n").getBytes());
+
+
+                dataOutputStream.flush();
+                frame = frameGrabber.grab();
+
+                count++;
+            }
+
+            dataOutputStream.close();
+            viewSocket.close();
+        }
+    }
+
+    public void testForwardPic() throws IOException {
         ServerSocket viewSS = new ServerSocket(4444);
 
         while (true) {
@@ -33,28 +98,21 @@ public class WebCamera {
             frameGrabber.setVideoOption("preset", "ultrafast");
             frameGrabber.setNumBuffers(25000000);
 
-            Java2DFrameConverter converter = new Java2DFrameConverter();
-
             frameGrabber.start();
-            Frame frame = frameGrabber.grab();
 
             DataOutputStream dataOutputStream = new DataOutputStream(viewSocket.getOutputStream());
 
-            dataOutputStream.write(("HTTP/1.1 200 OK" + "\r\n").getBytes());
-            dataOutputStream.write(("access-control-allow-origin: *" + "\r\n").getBytes());
-            dataOutputStream.write(("Cache-Control: no-store, no-cache, must-revalidate, pre-check=0, post-check=0, max-age=0" + "\r\n").getBytes());
-            dataOutputStream.write(("Connection: close" + "\r\n").getBytes());
-            dataOutputStream.write(("accept-ranges: bytes" + "\r\n").getBytes());
-            dataOutputStream.write(("X-XSS-Protection: 1; mode=block" + "\r\n").getBytes());
-            dataOutputStream.write(("Age: 57616" + "\r\n").getBytes());
-            dataOutputStream.write(("Date: Wed, 21 Nov 2018 16:27:52 GMT" + "\r\n").getBytes());
-            dataOutputStream.write(("Content-Type: image/jpg" + "\r\n").getBytes());
-            dataOutputStream.write(("x-content-type-options: nosniff" + "\r\n\r\n").getBytes());
+            dataOutputStream.write(("HTTP/1.0 200 OK\r\n" + "Server: YourServerName\r\n" + "Connection: close\r\n" + "Max-Age: 0\r\n" + "Expires: 0\r\n"
+                    + "Cache-Control: no-cache, private\r\n" + "Pragma: no-cache\r\n" + "Content-Type: multipart/x-mixed-replace; "
+                    + "boundary=--BoundaryString\r\n\r\n").getBytes());
 
+            Frame frame = frameGrabber.grab();
+
+            Java2DFrameConverter converter = new Java2DFrameConverter();
             int count = 0;
-            while (frame != null && count < 50) {
-                long l = 100;
-                Thread.sleep(l);
+
+            while (frame != null) {
+
                 logger.info(String.valueOf("number: " + count));
 
                 ByteArrayOutputStream baos = new ByteArrayOutputStream();
@@ -66,20 +124,22 @@ public class WebCamera {
 
                 byte[] imageInByte = baos.toByteArray();
 
-//                dataOutputStream.write(("Content-Length: " + imageInByte.length + "\r\n").getBytes());
-                dataOutputStream.write(imageInByte);
-//                dataOutputStream.write(("\r\n").getBytes());
-//                dataOutputStream.flush();
-//                dataOutputStream.close();
-                frame = frameGrabber.grabImage();
+                dataOutputStream.write(("--BoundaryString" + "\r\n").getBytes());
+                dataOutputStream.write(("Content-Type: image/jpg" + "\r\n").getBytes());
 
-//                frame = frameGrabber.grab();
+
+                dataOutputStream.write(("Content-Length: " + imageInByte.length + "\r\n\r\n").getBytes());
+                dataOutputStream.write(imageInByte);
+                dataOutputStream.write(("\r\n").getBytes());
+
+
+                dataOutputStream.flush();
+                frame = frameGrabber.grab();
+
                 count++;
             }
 
-//            BufferedImage image = ImageIO.read(new File(System.getProperty("user.dir") + "/mobile.jpeg"));
-
-
+            dataOutputStream.close();
             viewSocket.close();
         }
     }

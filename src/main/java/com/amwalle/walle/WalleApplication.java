@@ -15,6 +15,7 @@ public class WalleApplication {
 //        new WebCamera().saveVideoStream();
 //        new WebCamera().getVideoStream();
 //        webCamera.testGetPicFromVideo();
-        webCamera.testForwardPic();
+//        webCamera.testForwardPic();
+        webCamera.forwardVideoStream();
     }
 }
