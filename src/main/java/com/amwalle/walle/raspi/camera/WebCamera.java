@@ -8,6 +8,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import javax.imageio.ImageIO;
+import javax.imageio.stream.ImageInputStream;
 import java.awt.image.BufferedImage;
 import java.io.*;
 import java.net.ServerSocket;
@@ -17,6 +18,71 @@ import java.util.Arrays;
 @Component
 public class WebCamera {
     private static final Logger logger = LoggerFactory.getLogger(WebCamera.class);
+
+    public void testForwardPic() throws IOException, InterruptedException {
+        ServerSocket viewSS = new ServerSocket(4444);
+
+        while (true) {
+            Socket viewSocket = viewSS.accept();
+
+            FFmpegFrameGrabber frameGrabber = new FFmpegFrameGrabber(new File(System.getProperty("user.dir") + "/test.h264"));
+
+            frameGrabber.setFrameRate(100);
+            frameGrabber.setFormat("h264");
+            frameGrabber.setVideoBitrate(15);
+            frameGrabber.setVideoOption("preset", "ultrafast");
+            frameGrabber.setNumBuffers(25000000);
+
+            Java2DFrameConverter converter = new Java2DFrameConverter();
+
+            frameGrabber.start();
+            Frame frame = frameGrabber.grab();
+
+            DataOutputStream dataOutputStream = new DataOutputStream(viewSocket.getOutputStream());
+
+            dataOutputStream.write(("HTTP/1.1 200 OK" + "\r\n").getBytes());
+            dataOutputStream.write(("access-control-allow-origin: *" + "\r\n").getBytes());
+            dataOutputStream.write(("Cache-Control: no-store, no-cache, must-revalidate, pre-check=0, post-check=0, max-age=0" + "\r\n").getBytes());
+            dataOutputStream.write(("Connection: close" + "\r\n").getBytes());
+            dataOutputStream.write(("accept-ranges: bytes" + "\r\n").getBytes());
+            dataOutputStream.write(("X-XSS-Protection: 1; mode=block" + "\r\n").getBytes());
+            dataOutputStream.write(("Age: 57616" + "\r\n").getBytes());
+            dataOutputStream.write(("Date: Wed, 21 Nov 2018 16:27:52 GMT" + "\r\n").getBytes());
+            dataOutputStream.write(("Content-Type: image/jpg" + "\r\n").getBytes());
+            dataOutputStream.write(("x-content-type-options: nosniff" + "\r\n\r\n").getBytes());
+
+            int count = 0;
+            while (frame != null && count < 50) {
+                long l = 100;
+                Thread.sleep(l);
+                logger.info(String.valueOf("number: " + count));
+
+                ByteArrayOutputStream baos = new ByteArrayOutputStream();
+
+                BufferedImage bufferedImage = converter.convert(frame);
+                ImageIO.write(bufferedImage, "jpg", baos);
+                baos.flush();
+                baos.close();
+
+                byte[] imageInByte = baos.toByteArray();
+
+//                dataOutputStream.write(("Content-Length: " + imageInByte.length + "\r\n").getBytes());
+                dataOutputStream.write(imageInByte);
+//                dataOutputStream.write(("\r\n").getBytes());
+//                dataOutputStream.flush();
+//                dataOutputStream.close();
+                frame = frameGrabber.grabImage();
+
+//                frame = frameGrabber.grab();
+                count++;
+            }
+
+//            BufferedImage image = ImageIO.read(new File(System.getProperty("user.dir") + "/mobile.jpeg"));
+
+
+            viewSocket.close();
+        }
+    }
 
     public void testGetPicFromVideo() throws IOException {
         FFmpegFrameGrabber frameGrabber = new FFmpegFrameGrabber(new File(System.getProperty("user.dir") + "/test.mp4"));
@@ -137,7 +203,7 @@ public class WebCamera {
 
                 ImageIO.write(image, "jpg", byteArrayOutputStream);
                 byteArrayOutputStream.flush();
-                byte [] imageInByte = byteArrayOutputStream.toByteArray();
+                byte[] imageInByte = byteArrayOutputStream.toByteArray();
                 byteArrayOutputStream.close();
 
                 viewOS.write(("--BoundaryString\r\n" + "Content-type: image/jpg\r\n" + "Content-Length: " + imageInByte.length + "\r\n\r\n").getBytes());
