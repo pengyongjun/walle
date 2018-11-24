@@ -1,6 +1,5 @@
 package com.amwalle.walle.raspi.camera;
 
-import org.apache.catalina.Server;
 import org.bytedeco.javacv.FFmpegFrameGrabber;
 import org.bytedeco.javacv.Frame;
 import org.bytedeco.javacv.Java2DFrameConverter;
@@ -9,7 +8,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import javax.imageio.ImageIO;
-import javax.imageio.stream.ImageInputStream;
 import java.awt.image.BufferedImage;
 import java.io.*;
 import java.net.ServerSocket;
@@ -24,9 +22,14 @@ public class WebCamera {
         ServerSocket cameraSS = new ServerSocket(3333);
         ServerSocket viewSS = new ServerSocket(4444);
 
+        logger.info("**************** process start *************");
+
         while (true) {
             Socket cameraSocket = cameraSS.accept();
+            logger.info("*************** camera connected *****************");
+
             Socket viewSocket = viewSS.accept();
+            logger.info("*************** web connected *****************");
 
             InputStream videoStream = cameraSocket.getInputStream();
 
@@ -52,9 +55,7 @@ public class WebCamera {
             int count = 0;
 
             while (frame != null) {
-
-                logger.info(String.valueOf("number: " + count));
-
+                logger.info("************** number: " + count + " ***********");
                 ByteArrayOutputStream baos = new ByteArrayOutputStream();
 
                 BufferedImage bufferedImage = converter.convert(frame);

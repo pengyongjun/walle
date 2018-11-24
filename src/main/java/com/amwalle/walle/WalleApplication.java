@@ -9,13 +9,10 @@ import java.io.IOException;
 @SpringBootApplication
 public class WalleApplication {
 
-    public static void main(String[] args) throws IOException, InterruptedException {
+    public static void main(String[] args) throws IOException {
         SpringApplication.run(WalleApplication.class, args);
         WebCamera webCamera = new WebCamera();
-//        new WebCamera().saveVideoStream();
-//        new WebCamera().getVideoStream();
-//        webCamera.testGetPicFromVideo();
-//        webCamera.testForwardPic();
+
         webCamera.forwardVideoStream();
     }
 }
