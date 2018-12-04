@@ -16,7 +16,7 @@ public class Camera implements Runnable {
     private ServerSocket cameraServerSocket;
     private static List<Socket> cameraSocketList;
 
-    private Camera() throws IOException {
+    Camera() throws IOException {
         cameraServerSocket = new ServerSocket(3333);
         cameraSocketList = new ArrayList<>();
     }
