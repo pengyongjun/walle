@@ -25,7 +25,9 @@ public class Video implements Runnable {
     @Override
     public void run() {
         try {
+            logger.info("Video server socket is listening...");
             Socket videoSocket = videoServerSocket.accept();
+            logger.info("A new web video connected");
 
             // 单独的线程来处理这个连接，主线程回到监听状态
             VideoHandler videoHandler = new VideoHandler(videoSocket);
@@ -105,6 +107,7 @@ class VideoHandler implements Runnable {
 
         } catch (IOException e) {
             logger.info("Video handle error, exit ...");
+            logger.info(e.getMessage());
             try {
                 assert cameraSocket != null;
                 cameraSocket.close();

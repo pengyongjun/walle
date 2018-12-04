@@ -25,7 +25,7 @@ public class Camera implements Runnable {
     public void run() {
         try {
             Socket cameraSocket = cameraServerSocket.accept();
-            logger.info("New camera accepted, now there are " + (getCameraCount()+1) + " camera(s) now!");
+            logger.info("New camera accepted, now there are " + (getCameraCount()+1) + " camera(s)!");
             cameraSocketList.add(cameraSocket);
         } catch (IOException e) {
             logger.info("Camera server socket failed to accept!");
