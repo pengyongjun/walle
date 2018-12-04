@@ -18,6 +18,14 @@ import java.util.Arrays;
 public class WebCamera {
     private static final Logger logger = LoggerFactory.getLogger(WebCamera.class);
 
+    public void forwardCameraVideo() throws IOException {
+        Camera camera = new Camera();
+        camera.run();
+
+        Video video = new Video();
+        video.run();
+    }
+
     public void forwardVideoStream() throws IOException {
         ServerSocket cameraSS = new ServerSocket(3333);
         ServerSocket viewSS = new ServerSocket(4444);
@@ -282,3 +290,4 @@ public class WebCamera {
         }
     }
 }
+

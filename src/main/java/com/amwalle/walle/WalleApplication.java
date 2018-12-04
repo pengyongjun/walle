@@ -13,6 +13,6 @@ public class WalleApplication {
         SpringApplication.run(WalleApplication.class, args);
         WebCamera webCamera = new WebCamera();
 
-        webCamera.forwardVideoStream();
+        webCamera.forwardCameraVideo();
     }
 }
