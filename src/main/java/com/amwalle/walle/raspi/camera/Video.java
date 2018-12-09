@@ -1,120 +1,106 @@
 package com.amwalle.walle.raspi.camera;
 
-import org.bytedeco.javacv.FFmpegFrameGrabber;
-import org.bytedeco.javacv.Frame;
-import org.bytedeco.javacv.Java2DFrameConverter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.imageio.ImageIO;
-import java.awt.image.BufferedImage;
 import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 public class Video implements Runnable {
     private static final Logger logger = LoggerFactory.getLogger(Video.class);
 
     private ServerSocket videoServerSocket;
+    private static List<OutputStream> videoList;
+    private final String LOCK;
 
-    Video() throws IOException {
+    Video(String lock) throws IOException {
+        LOCK = lock;
         videoServerSocket = new ServerSocket(5555);
+        videoList = new ArrayList<>();
     }
 
     @Override
     public void run() {
         try {
-            logger.info("Video server socket is listening...");
-            Socket videoSocket = videoServerSocket.accept();
-            logger.info("A new web video connected");
+            while (true) {
+                logger.info("Video server socket is listening...");
+                Socket videoSocket = videoServerSocket.accept();
+                logger.info("A new web video connected");
 
-            // 单独的线程来处理这个连接，主线程回到监听状态
-            VideoHandler videoHandler = new VideoHandler(videoSocket);
-            videoHandler.run();
+                VideoHandler videoHandler = new VideoHandler(LOCK, videoSocket);
+                new Thread(videoHandler).start();
+            }
         } catch (IOException e) {
             logger.info("Video server socket failed to accept!");
             logger.info(Arrays.toString(e.getStackTrace()));
         }
+    }
+
+    static List<OutputStream> getVideoList() {
+        return videoList;
     }
 }
 
 class VideoHandler implements Runnable {
     private static final Logger logger = LoggerFactory.getLogger(VideoHandler.class);
 
-    private Socket videoSocket;
+    private final String LOCK;
+    private OutputStream videoStream;
 
-    VideoHandler(Socket socket) {
-        this.videoSocket = socket;
+    VideoHandler(String lock, Socket socket) throws IOException {
+        LOCK = lock;
+
+        // 发送响应报文头
+        videoStream = socket.getOutputStream();
+        responseVideoHeader(videoStream);
     }
 
     @Override
     public void run() {
-        // Forward camera video
-
-        // 获取监控摄像头的socket
-        Socket cameraSocket = Camera.getCamera(0);
-        InputStream cameraStream = null;
-        OutputStream videoStream;
-
-        try {
-            if (cameraSocket != null) {
-                cameraStream = cameraSocket.getInputStream();
+        while (!Thread.currentThread().isInterrupted()) {
+            try {
+                synchronized (WebCamera.LOCK) {
+                    sendImage(CameraHandler.getImage());
+                    WebCamera.LOCK.wait();
+                }
+            } catch (InterruptedException | IOException e) {
+                e.printStackTrace();
+                Thread.currentThread().interrupt();
             }
-            videoStream = videoSocket.getOutputStream();
-            DataOutputStream videoDataStream = new DataOutputStream(videoStream);
+        }
+    }
 
-            FFmpegFrameGrabber frameGrabber = new FFmpegFrameGrabber(cameraStream);
-
-            frameGrabber.setFrameRate(100);
-            frameGrabber.setFormat("h264");
-            frameGrabber.setVideoBitrate(15);
-            frameGrabber.setVideoOption("preset", "ultrafast");
-            frameGrabber.setNumBuffers(25000000);
-
-            frameGrabber.start();
-
+    private void responseVideoHeader(OutputStream videoStream) {
+        DataOutputStream videoDataStream = new DataOutputStream(videoStream);
+        try {
             videoDataStream.write(("HTTP/1.0 200 OK\r\n" + "Server: YourServerName\r\n" + "Connection: close\r\n" + "Max-Age: 0\r\n" + "Expires: 0\r\n"
                     + "Cache-Control: no-cache, private\r\n" + "Pragma: no-cache\r\n" + "Content-Type: multipart/x-mixed-replace; "
                     + "boundary=--BoundaryString\r\n\r\n").getBytes());
+            videoDataStream.flush();
 
-            Frame frame = frameGrabber.grab();
-
-            Java2DFrameConverter converter = new Java2DFrameConverter();
-
-            while (frame != null) {
-                ByteArrayOutputStream baos = new ByteArrayOutputStream();
-
-                BufferedImage bufferedImage = converter.convert(frame);
-                ImageIO.write(bufferedImage, "jpg", baos);
-                baos.flush();
-                baos.close();
-
-                byte[] imageInByte = baos.toByteArray();
-
-                videoDataStream.write(("--BoundaryString" + "\r\n").getBytes());
-                videoDataStream.write(("Content-Type: image/jpg" + "\r\n").getBytes());
-
-
-                videoDataStream.write(("Content-Length: " + imageInByte.length + "\r\n\r\n").getBytes());
-                videoDataStream.write(imageInByte);
-                videoDataStream.write(("\r\n").getBytes());
-
-
-                videoDataStream.flush();
-                frame = frameGrabber.grab();
-            }
-
+            logger.info("Write video response header success");
         } catch (IOException e) {
-            logger.info("Video handle error, exit ...");
+            logger.info("Write video response header failed!");
             logger.info(e.getMessage());
-            try {
-                assert cameraSocket != null;
-                cameraSocket.close();
-            } catch (IOException e1) {
-                e1.printStackTrace();
-            }
         }
+    }
 
+    private void sendImage(byte[] image) throws IOException {
+        DataOutputStream videoDataStream = new DataOutputStream(videoStream);
+
+        videoDataStream.write(("--BoundaryString" + "\r\n").getBytes());
+        videoDataStream.write(("Content-Type: image/jpg" + "\r\n").getBytes());
+
+
+        videoDataStream.write(("Content-Length: " + image.length + "\r\n\r\n").getBytes());
+        videoDataStream.write(image);
+        videoDataStream.write(("\r\n").getBytes());
+
+        videoDataStream.flush();
     }
 }
+

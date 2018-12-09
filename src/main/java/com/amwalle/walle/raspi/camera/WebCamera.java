@@ -18,12 +18,15 @@ import java.util.Arrays;
 public class WebCamera {
     private static final Logger logger = LoggerFactory.getLogger(WebCamera.class);
 
-    public void forwardCameraVideo() throws IOException {
-        Camera camera = new Camera();
-        camera.run();
+    static final String LOCK = "LOCK";
 
-        Video video = new Video();
-        video.run();
+    public void forwardCameraVideo() throws IOException {
+        final String LOCK = "LOCK";
+        Camera camera = new Camera(LOCK);
+        new Thread(camera).start();
+
+        Video video = new Video(LOCK);
+        new Thread(video).start();
     }
 
     public void forwardVideoStream() throws IOException {
