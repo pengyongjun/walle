@@ -1,14 +1,9 @@
 package com.amwalle.walle.raspi.camera;
 
-import org.bytedeco.javacv.FFmpegFrameGrabber;
-import org.bytedeco.javacv.Frame;
-import org.bytedeco.javacv.Java2DFrameConverter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.imageio.ImageIO;
-import java.awt.image.BufferedImage;
-import java.io.*;
+import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
@@ -18,14 +13,42 @@ import java.util.List;
 public class Camera implements Runnable {
     private static final Logger logger = LoggerFactory.getLogger(Camera.class);
 
-    private final String LOCK;
-
     private ServerSocket cameraServerSocket;
-    private static int cameraCount = 0;
+    private static List<CameraHandler> cameraList;
 
-    Camera(String lock) throws IOException {
-        LOCK = lock;
-        cameraServerSocket = new ServerSocket(3333);
+    Camera(int port) throws IOException {
+        cameraServerSocket = new ServerSocket(port);
+        cameraList = new ArrayList<>();
+    }
+
+    public static CameraHandler getCameraById(String id) {
+        for (CameraHandler cameraHandler : cameraList
+                ) {
+            if (id.equals(cameraHandler.getCameraId())) {
+                return cameraHandler;
+            }
+        }
+
+        return null;
+    }
+
+    public static CameraHandler getCameraByName(String name) {
+        for (CameraHandler cameraHandler : cameraList
+                ) {
+            if (name.equals(cameraHandler.getCameraId())) {
+                return cameraHandler;
+            }
+        }
+
+        return null;
+    }
+
+    static CameraHandler getCameraByIndex(int index) {
+        if (index >= cameraList.size() || index < 0) {
+            return null;
+        }
+
+        return cameraList.get(index);
     }
 
     @Override
@@ -35,11 +58,12 @@ public class Camera implements Runnable {
                 logger.info("Camera server socket is listening...");
 
                 Socket cameraSocket = cameraServerSocket.accept();
-                cameraCount++;
 
-                logger.info("New camera accepted, now there are " + cameraCount + " camera(s)!");
+                logger.info("New camera accepted, now there are " + cameraList.size() + " camera(s)!");
 
-                CameraHandler cameraHandler = new CameraHandler(LOCK, cameraSocket);
+                CameraHandler cameraHandler = new CameraHandler(cameraSocket);
+                cameraList.add(cameraHandler);
+
                 new Thread(cameraHandler).start();
             }
         } catch (IOException e) {
@@ -49,95 +73,7 @@ public class Camera implements Runnable {
     }
 
     public static int getCameraCount() {
-        return cameraCount;
+        return cameraList.size();
     }
 }
 
-class CameraHandler implements Runnable {
-    private static final Logger logger = LoggerFactory.getLogger(CameraHandler.class);
-
-    private Socket cameraSocket;
-    private static byte[] image;
-
-    CameraHandler(String lock, Socket socket) {
-        String LOCK = lock;
-        this.cameraSocket = socket;
-    }
-
-    @Override
-    public void run() {
-        try {
-            InputStream cameraStream = cameraSocket.getInputStream();
-            FFmpegFrameGrabber frameGrabber = new FFmpegFrameGrabber(cameraStream);
-
-            frameGrabber.setFrameRate(100);
-            frameGrabber.setFormat("h264");
-            frameGrabber.setVideoBitrate(15);
-            frameGrabber.setVideoOption("preset", "ultrafast");
-            frameGrabber.setNumBuffers(25000000);
-
-            frameGrabber.start();
-
-            Frame frame = frameGrabber.grab();
-
-            Java2DFrameConverter converter = new Java2DFrameConverter();
-
-            while (frame != null) {
-                ByteArrayOutputStream baos = new ByteArrayOutputStream();
-
-                BufferedImage bufferedImage = converter.convert(frame);
-                ImageIO.write(bufferedImage, "jpg", baos);
-                baos.flush();
-                baos.close();
-
-                byte[] imageInByte = baos.toByteArray();
-                setImage(imageInByte);
-
-                synchronized (WebCamera.LOCK) {
-                    WebCamera.LOCK.notifyAll();
-                }
-
-                frame = frameGrabber.grab();
-            }
-
-        } catch (IOException e) {
-            logger.info("Video handle error, exit ...");
-            logger.info(e.getMessage());
-        }
-    }
-
-    private static void setImage(byte[] imageInByte) {
-        image = imageInByte;
-    }
-
-    static byte[] getImage() {
-        return image;
-    }
-
-    private void forwardVideo(byte[] image) {
-        if (Video.getVideoList().isEmpty()) {
-            return;
-        }
-
-        for (OutputStream videoStream : Video.getVideoList()) {
-            DataOutputStream videoDataStream = new DataOutputStream(videoStream);
-
-            try {
-                videoDataStream.write(("--BoundaryString" + "\r\n").getBytes());
-                videoDataStream.write(("Content-Type: image/jpg" + "\r\n").getBytes());
-
-
-                videoDataStream.write(("Content-Length: " + image.length + "\r\n\r\n").getBytes());
-                videoDataStream.write(image);
-                videoDataStream.write(("\r\n").getBytes());
-
-                videoDataStream.flush();
-            } catch (IOException e) {
-                logger.info("Send image to video failed");
-                Video.getVideoList().remove(videoStream);
-                logger.info(e.getMessage());
-            }
-
-        }
-    }
-}

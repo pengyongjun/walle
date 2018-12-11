@@ -18,14 +18,13 @@ import java.util.Arrays;
 public class WebCamera {
     private static final Logger logger = LoggerFactory.getLogger(WebCamera.class);
 
-    static final String LOCK = "LOCK";
-
     public void forwardCameraVideo() throws IOException {
-        final String LOCK = "LOCK";
-        Camera camera = new Camera(LOCK);
+        int cameraPort = 3333;
+        int videoPort = 5555;
+        Camera camera = new Camera(cameraPort);
         new Thread(camera).start();
 
-        Video video = new Video(LOCK);
+        Video video = new Video(videoPort);
         new Thread(video).start();
     }
 
@@ -97,7 +96,7 @@ public class WebCamera {
     }
 
     public void testForwardPic() throws IOException {
-        ServerSocket viewSS = new ServerSocket(4444);
+        ServerSocket viewSS = new ServerSocket(5555);
 
         while (true) {
             Socket viewSocket = viewSS.accept();
@@ -130,11 +129,12 @@ public class WebCamera {
                 ByteArrayOutputStream baos = new ByteArrayOutputStream();
 
                 BufferedImage bufferedImage = converter.convert(frame);
-                ImageIO.write(bufferedImage, "jpg", baos);
-                baos.flush();
-                baos.close();
-
-                byte[] imageInByte = baos.toByteArray();
+//                ImageIO.write(bufferedImage, "jpg", baos);
+//                baos.flush();
+//                baos.close();
+//
+//                byte[] imageInByte = baos.toByteArray();
+                byte[] imageInByte = VideoHandler.addWaterMark(bufferedImage);
 
                 dataOutputStream.write(("--BoundaryString" + "\r\n").getBytes());
                 dataOutputStream.write(("Content-Type: image/jpg" + "\r\n").getBytes());
