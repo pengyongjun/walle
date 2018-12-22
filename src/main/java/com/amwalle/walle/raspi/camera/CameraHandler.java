@@ -10,6 +10,7 @@ import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.*;
 import java.net.Socket;
+import java.nio.Buffer;
 
 public class CameraHandler implements Runnable {
     private static final Logger logger = LoggerFactory.getLogger(CameraHandler.class);
@@ -20,12 +21,13 @@ public class CameraHandler implements Runnable {
     private final String LOCK = "LOCK";
 
     private Socket cameraSocket;
-    private static byte[] image;
+    private static BufferedImage bufferedImage;
 
-    CameraHandler(Socket socket) {
+    CameraHandler(Socket socket) throws IOException {
         this.cameraSocket = socket;
 
         // TODO 获取Camera入参
+
         CAMERA_ID = "1";
         CAMERA_NAME = "home";
     }
@@ -46,9 +48,19 @@ public class CameraHandler implements Runnable {
     public void run() {
         try {
             InputStream cameraStream = cameraSocket.getInputStream();
+
+//            try (BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(cameraStream))) {
+//                String line = bufferedReader.readLine();
+//
+//                while (null != line && !line.equals("")) {
+//                    logger.info(line);
+//                    line = bufferedReader.readLine();
+//                }
+//            }
+
             FFmpegFrameGrabber frameGrabber = new FFmpegFrameGrabber(cameraStream);
 
-            frameGrabber.setFrameRate(100);
+            frameGrabber.setFrameRate(30);
             frameGrabber.setFormat("h264");
             frameGrabber.setVideoBitrate(15);
             frameGrabber.setVideoOption("preset", "ultrafast");
@@ -59,15 +71,11 @@ public class CameraHandler implements Runnable {
             Frame frame = frameGrabber.grab();
 
             Java2DFrameConverter converter = new Java2DFrameConverter();
-            ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
 
             while (frame != null) {
                 BufferedImage bufferedImage = converter.convert(frame);
-                ImageIO.write(bufferedImage, "jpg", byteArrayOutputStream);
-                byteArrayOutputStream.flush();
 
-                byte[] imageInByte = byteArrayOutputStream.toByteArray();
-                setImage(imageInByte);
+                setBufferedImage(bufferedImage);
 
                 synchronized (LOCK) {
                     LOCK.notifyAll();
@@ -75,20 +83,17 @@ public class CameraHandler implements Runnable {
 
                 frame = frameGrabber.grab();
             }
-
-            byteArrayOutputStream.close();
-
         } catch (IOException e) {
             logger.info("Video handle error, exit ...");
             logger.info(e.getMessage());
         }
     }
 
-    private void setImage(byte[] imageInByte) {
-        image = imageInByte;
+    private void setBufferedImage(BufferedImage image) {
+        bufferedImage = image;
     }
 
-    byte[] getImage() {
-        return image;
+    BufferedImage getBufferedImage() {
+        return bufferedImage;
     }
 }

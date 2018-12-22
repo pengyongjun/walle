@@ -129,12 +129,11 @@ public class WebCamera {
                 ByteArrayOutputStream baos = new ByteArrayOutputStream();
 
                 BufferedImage bufferedImage = converter.convert(frame);
-//                ImageIO.write(bufferedImage, "jpg", baos);
-//                baos.flush();
-//                baos.close();
-//
-//                byte[] imageInByte = baos.toByteArray();
-                byte[] imageInByte = VideoHandler.addWaterMark(bufferedImage);
+                ImageIO.write(bufferedImage, "jpg", baos);
+                baos.flush();
+                baos.close();
+
+                byte[] imageInByte = baos.toByteArray();
 
                 dataOutputStream.write(("--BoundaryString" + "\r\n").getBytes());
                 dataOutputStream.write(("Content-Type: image/jpg" + "\r\n").getBytes());

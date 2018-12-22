@@ -1,5 +1,6 @@
 package com.amwalle.walle.raspi.camera;
 
+import org.bytedeco.javacv.Java2DFrameConverter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -29,12 +30,15 @@ public class VideoHandler implements Runnable {
             line = bufferedReader.readLine();
         }
 
-        // TODO 获取CameraHandler
-        cameraHandler = Camera.getCameraByIndex(0);
-
         // 发送响应报文头
         videoStream = socket.getOutputStream();
         sendVideoHeader(videoStream);
+
+        // TODO 获取CameraHandler
+        cameraHandler = Camera.getCameraByIndex(0);
+        if (null == cameraHandler) {
+            Thread.currentThread().interrupt();
+        }
     }
 
     @Override
@@ -42,10 +46,16 @@ public class VideoHandler implements Runnable {
         while (!Thread.currentThread().isInterrupted()) {
             try {
                 synchronized (cameraHandler.getLock()) {
-                    if (null == cameraHandler.getImage()) {
+                    BufferedImage bufferedImage = cameraHandler.getBufferedImage();
+
+                    if (null == bufferedImage) {
                         cameraHandler.getLock().wait();
+                        bufferedImage = cameraHandler.getBufferedImage();
                     }
-                    sendImage(cameraHandler.getImage());
+
+                    assert bufferedImage != null;
+                    sendImage(addWaterMark(bufferedImage));
+
                     cameraHandler.getLock().wait();
                 }
             } catch (InterruptedException | IOException e) {
@@ -84,26 +94,37 @@ public class VideoHandler implements Runnable {
         videoDataStream.flush();
     }
 
-    static byte[] addWaterMark(BufferedImage bufferedImage) throws IOException {
+    private  byte[] convertBufferedImageToByte(BufferedImage bufferedImage) throws IOException {
+
+        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+        ImageIO.write(bufferedImage, "jpg", byteArrayOutputStream);
+        byteArrayOutputStream.flush();
+
+        return byteArrayOutputStream.toByteArray();
+    }
+
+    private byte[] addWaterMark(BufferedImage bufferedImage) throws IOException {
         Graphics2D graphics = bufferedImage.createGraphics();
 
         // 时间戳
         graphics.setFont(new Font("Arial", Font.ITALIC, 14));
         graphics.setColor(Color.white);
-        graphics.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_ATOP, 0.8f));
+        graphics.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_ATOP, 1.0f));
         String time = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date());
         graphics.drawString(time, 50, 20);
 
         // logo
-        ImageIcon logoImgIcon = new ImageIcon(ImageIO.read(new File(System.getProperty("user.dir") + "/temp/logo.png")));
-        Image logoImg = logoImgIcon.getImage();
-        graphics.drawImage(logoImg, 15,20,30,30,null);
-
+//        ImageIcon logoImgIcon = new ImageIcon(ImageIO.read(new File(System.getProperty("user.dir") + "/temp/logo.png")));
+//        Image logoImg = logoImgIcon.getImage();
+//        graphics.drawImage(logoImg, 15,20,30,30,null);
+//
         graphics.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER));
         graphics.dispose();
 
         ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+        byteArrayOutputStream.flush();
         ImageIO.write(bufferedImage, "jpg", byteArrayOutputStream);
+        byteArrayOutputStream.close();
 
         return byteArrayOutputStream.toByteArray();
     }

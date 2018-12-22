@@ -23,7 +23,7 @@ public class Camera implements Runnable {
 
     public static CameraHandler getCameraById(String id) {
         for (CameraHandler cameraHandler : cameraList
-                ) {
+        ) {
             if (id.equals(cameraHandler.getCameraId())) {
                 return cameraHandler;
             }
@@ -34,7 +34,7 @@ public class Camera implements Runnable {
 
     public static CameraHandler getCameraByName(String name) {
         for (CameraHandler cameraHandler : cameraList
-                ) {
+        ) {
             if (name.equals(cameraHandler.getCameraId())) {
                 return cameraHandler;
             }
@@ -59,7 +59,7 @@ public class Camera implements Runnable {
 
                 Socket cameraSocket = cameraServerSocket.accept();
 
-                logger.info("New camera accepted, now there are " + cameraList.size() + " camera(s)!");
+                logger.info("New camera accepted, now there are " + (cameraList.size() + 1) + " camera(s)!");
 
                 CameraHandler cameraHandler = new CameraHandler(cameraSocket);
                 cameraList.add(cameraHandler);
