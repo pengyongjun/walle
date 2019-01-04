@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
+
+    <!--<bean class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">-->
+        <!--&lt;!&ndash;properties文件配置&ndash;&gt;-->
+        <!--<property name="locations">-->
+            <!--<list>-->
+                <!--<value>application.properties</value>-->
+            <!--</list>-->
+        <!--</property>-->
+        <!--<property name="fileEncoding" value="UTF-8"/>-->
+    <!--</bean>-->
+
+    <bean id="mailSender" class="org.springframework.mail.javamail.JavaMailSenderImpl">
+        <property name="host" value="smtp.qq.com"/>
+        <property name="port" value="465"/>
+        <property name="defaultEncoding" value="utf-8"/>
+        <property name="username" value="415913422@qq.com"/>
+        <property name="password" value="zoeoysfjszdpbiea"/>
+        <property name="javaMailProperties">
+            <props>
+                <prop key="mail.smtp.sendpartial">true</prop>
+                <prop key="mail.smtp.auth">true</prop>
+                <prop key="mail.smtp.socketFactory.port">465</prop>
+                <prop key="mail.smtp.socketFactory.class">javax.net.ssl.SSLSocketFactory</prop>
+            </props>
+        </property>
+    </bean>
+    <bean class="com.amwalle.walle.util.Mail">
+        <property name="mailSender" ref="mailSender"/>
+    </bean>
+</beans>
