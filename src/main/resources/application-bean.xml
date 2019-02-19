@@ -14,11 +14,12 @@
     <!--</bean>-->
 
     <bean id="mailSender" class="org.springframework.mail.javamail.JavaMailSenderImpl">
-        <property name="host" value="smtp.qq.com"/>
+        <property name="host" value="smtp.163.com"/>
         <property name="port" value="465"/>
         <property name="defaultEncoding" value="utf-8"/>
-        <property name="username" value="415913422@qq.com"/>
-        <property name="password" value="zoeoysfjszdpbiea"/>
+        <property name="username" value="pengyongjun3@163.com"/>
+        <!--<property name="password" value="zoeoysfjszdpbiea"/>-->
+        <property name="password" value="amwalle1"/>
         <property name="javaMailProperties">
             <props>
                 <prop key="mail.smtp.sendpartial">true</prop>
