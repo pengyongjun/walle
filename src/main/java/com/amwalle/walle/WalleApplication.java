@@ -1,6 +1,8 @@
 package com.amwalle.walle;
 
 import com.amwalle.walle.raspi.camera.WebCamera;
+import com.amwalle.walle.scheduler.JobManager;
+import org.quartz.SchedulerException;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
@@ -15,5 +17,12 @@ public class WalleApplication {
 
         webCamera.forwardCameraVideo();
 //        webCamera.testForwardPic();
+
+        try {
+            JobManager jobManager = new JobManager();
+            jobManager.test();
+        } catch (SchedulerException e) {
+            e.printStackTrace();
+        }
     }
 }
