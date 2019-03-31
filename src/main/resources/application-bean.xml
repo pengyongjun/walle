@@ -33,43 +33,4 @@
         <property name="mailSender" ref="mailSender"/>
     </bean>
 
-
-    <!--&lt;!&ndash;<bean id="taskJob" class="com.amwalle.walle.scheduler.QuartzJobFactory"/>&ndash;&gt;-->
-    <!--&lt;!&ndash;<bean id="jobDetail" class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">&ndash;&gt;-->
-        <!--&lt;!&ndash;<property name="group" value="DEFAULT"/>&ndash;&gt;-->
-        <!--&lt;!&ndash;<property name="name" value="job_work_name"/>&ndash;&gt;-->
-        <!--&lt;!&ndash;&lt;!&ndash;false表示等上一个任务执行完后再开启新的任务&ndash;&gt;&ndash;&gt;-->
-        <!--&lt;!&ndash;<property name="concurrent" value="false"/>&ndash;&gt;-->
-        <!--&lt;!&ndash;<property name="targetObject">&ndash;&gt;-->
-            <!--&lt;!&ndash;<ref bean="taskJob"/>&ndash;&gt;-->
-        <!--&lt;!&ndash;</property>&ndash;&gt;-->
-        <!--&lt;!&ndash;<property name="targetMethod">&ndash;&gt;-->
-            <!--&lt;!&ndash;<value>execute</value>&ndash;&gt;-->
-        <!--&lt;!&ndash;</property>&ndash;&gt;-->
-    <!--&lt;!&ndash;</bean>&ndash;&gt;-->
-    <!--<bean id="myTrigger" class="org.springframework.scheduling.quartz.CronTriggerFactoryBean">-->
-        <!--<property name="name" value="work_default_name"/>-->
-        <!--<property name="group" value="DEFAULT"/>-->
-
-        <!--<property name="cronExpression">-->
-            <!--<value>0/5 * * * * ?</value>-->
-        <!--</property>-->
-    <!--</bean>-->
-    <!--<bean id="scheduler" class="org.springframework.scheduling.quartz.SchedulerFactoryBean">-->
-        <!--<property name="triggers">-->
-            <!--<list>-->
-                <!--&lt;!&ndash;<ref bean="myTrigger"/>&ndash;&gt;-->
-            <!--</list>-->
-        <!--</property>-->
-    <!--</bean>-->
-    <!--<bean class="com.amwalle.walle.scheduler.JobManager">-->
-        <!--<property name="schedulerFactoryBean" ref="scheduler"/>-->
-    <!--</bean>-->
-
-    <!--<bean id="schedulerFactoryBean" lazy-init="false" autowire="no" class="com.amwalle.walle.scheduler.MyJobFactory" />-->
-    <bean id="jobFactory" class="com.amwalle.walle.scheduler.MyJobFactory"/>
-    <bean id="schedulerFactoryBean" class="org.springframework.scheduling.quartz.SchedulerFactoryBean">
-        <property name="jobFactory" ref="jobFactory"/>
-    </bean>
-
 </beans>
