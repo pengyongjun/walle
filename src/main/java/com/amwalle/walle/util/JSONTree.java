@@ -27,6 +27,7 @@ public class JSONTree {
         if (nodeData instanceof JSONObject) {
             node.setDataType("Object");
 
+
             JSONObject jsonObject = (JSONObject) nodeData;
             Set<String> keySet = jsonObject.keySet();
 
@@ -45,7 +46,9 @@ public class JSONTree {
             for (int index = 0, length = jsonArray.length(); index < length; index++) {
                 // Array 下面的内容，不是节点，不能按照节点来处理
                 JSONNode childNode = createJSONTree(jsonArray.get(index), nodeName, nodePath + "[" + index + "]", level);
-                childrenList.add(childNode);
+                if (childNode.getChildren() != null) {
+                    childrenList.addAll(childNode.getChildren());
+                }
             }
 
             node.setChildren(childrenList);
@@ -79,31 +82,37 @@ public class JSONTree {
 
     public static void main(String[] args) {
         String data = "{\n" +
-                "            \"__expiredDate\": \"2019-03-27T03:00:00.000+08:00\",\n" +
-                "            \"__startDate\": \"2019-03-27T00:00:00.000+08:00\",\n" +
-                "            \"categoryId\": \"\",\n" +
-                "            \"id\": \"5889257138\",\n" +
-                "            \"itemList\": [\n" +
-                "                {\n" +
-                "                    \"id\": \"8477823502701\",\n" +
-                "                    \"voucherId\": \"8477823502701\"\n" +
-                "                },\n" +
-                "                {\n" +
-                "                    \"id\": \"8388402518266\",\n" +
-                "                    \"voucherId\": \"8388402518266\"\n" +
-                "                },\n" +
-                "                {\n" +
-                "                    \"id\": \"8475223900988\",\n" +
-                "                    \"voucherId\": \"8475223900988\"\n" +
-                "                }\n" +
-                "            ]\n" +
-                "        }";
+                "    \"TestNull\": null,\n" +
+                "    \"country\": [\n" +
+                "        {\n" +
+                "            \"A\": \"A\",\n" +
+                "            \"B\": \"B\"\n" +
+                "        },\n" +
+                "        {\n" +
+                "            \"C\": \"C\",\n" +
+                "            \"D\": \"D\"\n" +
+                "        }\n" +
+                "    ],\n" +
+                "    \"fast_open\": false,\n" +
+                "    \"local_address\": \"127.0.0.1\",\n" +
+                "    \"local_port\": 1080,\n" +
+                "    \"method\": \"aes-256-cfb\",\n" +
+                "    \"password\": \"pyj1234%\",\n" +
+                "    \"server\": \"0.0.0.0\",\n" +
+                "    \"server_port\": 8388,\n" +
+                "    \"test\": [\n" +
+                "        \"hello\",\n" +
+                "        \"world\"\n" +
+                "    ],\n" +
+                "    \"timeout\": 300,\n" +
+                "    \"workers\": 1\n" +
+                "}";
 
         JSONObject jsonObject = new JSONObject(data);
         JSONNode root = JSONTree.createJSONTree(jsonObject, "root", "#", 0);
         List<JSONNode> list = JSONTree.levelTraversal(root);
         for (JSONNode jsonNode : list) {
-            System.out.println(jsonNode.getNodePath() + "--" + jsonNode.getLevel());
+            System.out.println(jsonNode.getNodePath() + "--" + jsonNode.getLevel() + "--" + jsonNode.getDataType() + "--" + jsonNode.getData().toString());
         }
     }
 }
