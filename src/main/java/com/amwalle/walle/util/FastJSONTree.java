@@ -1,12 +1,12 @@
 package com.amwalle.walle.util;
 
-import org.json.JSONArray;
-import org.json.JSONObject;
+import com.alibaba.fastjson.*;
+import com.alibaba.fastjson.parser.Feature;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
-public class JSONTree {
+public class FastJSONTree {
 
     public static JSONNode createJSONTree(Object nodeData, String nodeName, String nodePath, int level) {
         if (nodeData == null) {
@@ -40,7 +40,7 @@ public class JSONTree {
 
             JSONArray jsonArray = (JSONArray) nodeData;
 
-            for (int index = 0, length = jsonArray.length(); index < length; index++) {
+            for (int index = 0, length = jsonArray.size(); index < length; index++) {
                 // Array 元素，不是单个节点；所以将元素下一级的孩子链表整个作为 Array 的孩子链表
                 JSONNode childNode = createJSONTree(jsonArray.get(index), nodeName, nodePath + "[" + index + "]", level);
                 if (childNode.getChildren() != null) {
@@ -110,30 +110,36 @@ public class JSONTree {
 
     public static void main(String[] args) {
         String data = "{\n" +
-                "    \"__expiredDate\": \"2019-03-27T03:00:00.000+08:00\",\n" +
-                "    \"__startDate\": \"2019-03-27T00:00:00.000+08:00\",\n" +
-                "    \"categoryId\": \"\",\n" +
-                "    \"id\": \"5889257138\",\n" +
-                "    \"itemList\": [\n" +
-                "        {\n" +
-                "            \"id\": \"8477823502701\",\n" +
-                "            \"voucherId\": \"8477823502701\",\n" +
-                "            \"test\": \"test\"\n" +
-                "        },\n" +
-                "        {\n" +
-                "            \"id\": \"8388402518266\",\n" +
-                "            \"voucherId\": \"8388402518266\"\n" +
-                "        },\n" +
-                "        {\n" +
-                "            \"id\": \"8475223900988\",\n" +
-                "            \"voucherId\": \"8475223900988\"\n" +
-                "        }\n" +
-                "    ]\n" +
+                "\t\"root\": {\n" +
+                "        \"__expiredDate\": \"2019-03-27T03:00:00.000+08:00\",\n" +
+                "        \"__startDate\": \"2019-03-27T00:00:00.000+08:00\",\n" +
+                "        \"categoryId\": \"\",\n" +
+                "        \"id\": \"5889257138\",\n" +
+                "        \"itemList\": [\n" +
+                "            {\n" +
+                "                \"id\": \"8477823502701\",\n" +
+                "                \"voucherId\": \"8477823502701\",\n" +
+                "                \"aaa\": \"test\"\n" +
+                "            },\n" +
+                "            {\n" +
+                "                \"id\": \"8388402518266\",\n" +
+                "                \"voucherId\": \"8388402518266\"\n" +
+                "            },\n" +
+                "            {\n" +
+                "                \"id\": \"8475223900988\",\n" +
+                "                \"voucherId\": \"8475223900988\"\n" +
+                "            }\n" +
+                "        ]\n" +
+                "\t}\n" +
                 "}";
 
-        JSONObject jsonObject = new JSONObject(data);
-        JSONNode root = JSONTree.createJSONTree(jsonObject, "root", "#", 0);
-        List<JSONNode> list = JSONTree.depthFirstTraversal(root);
+        JSONObject jsonObject = JSONObject.parseObject(data, JSONObject.class, Feature.OrderedField);
+
+        System.out.println(jsonObject.toString());
+
+        JSONNode root = FastJSONTree.createJSONTree(jsonObject, "root", "#", 0);
+
+        List<JSONNode> list = FastJSONTree.depthFirstTraversal(root);
         for (JSONNode jsonNode : list) {
             System.out.println(jsonNode.getNodePath() + "--" + jsonNode.getLevel() + "--" + jsonNode.getDataType() + "--" + jsonNode.getData().toString());
         }
