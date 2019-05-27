@@ -1,5 +1,6 @@
 package com.amwalle.walle.util;
 
+import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.alibaba.fastjson.parser.Feature;
@@ -10,6 +11,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 public class JSONTree {
 
     private static HashSet<String> pathSet = new HashSet<>();
+    private static HashMap<String, JSONNode> arrayNode = new HashMap<>();
 
     /**
      * This method is used for creating a JSON Tree
@@ -126,12 +128,23 @@ public class JSONTree {
                 }
             }
 
+            // 判断节点是否已经存在，如果已经存在，并且 arrayChildrenList 不为空，
+            // 那么将 arrayChildrenList 加到已存在节点的 child 中，并舍弃当前正在生成的节点
+            if (arrayNode.get(arrayItem.getNodePath()) != null) {
+                if (!arrayChildrenList.isEmpty()) {
+                    arrayNode.get(arrayItem.getNodePath()).getChildren().addAll(arrayChildrenList);
+                }
+
+                return null;
+            }
+
             arrayItem.setChildren(arrayChildrenList);
             childrenList.add(arrayItem);
-
             node.setChildren(childrenList);
+
+            arrayNode.put(arrayItem.getNodePath(), arrayItem);
         } else {
-            // 如果路径已经存在，则舍弃该节点
+            // 针对叶子节点，如果路径已经存在，则舍弃该节点
             if (!pathSet.add(node.getNodePath())) {
                 return null;
             }
@@ -221,7 +234,7 @@ public class JSONTree {
 
         // TODO 在这里区分子节点的类别，然后判断应该加入什么关键字
         if (NodeType.Object.getJsonType().equals(jsonNode.getDataType())) {
-            jsonObject.fluentPut("required", "[]");
+            jsonObject.fluentPut("required", new JSONArray());
             jsonObject.fluentPut("properties", schema);
         } else if (NodeType.Array.getJsonType().equals(jsonNode.getDataType())) {
             jsonObject.fluentPut("items", schema.get("items"));
@@ -233,37 +246,54 @@ public class JSONTree {
 
     public static void main(String[] args) {
         String data = "{\n" +
-                "    \"TestNull\": null,\n" +
-                "    \"country\": [\n" +
+                "    \"datas\": [\n" +
                 "        {\n" +
-                "            \"A\": \"A\",\n" +
-                "            \"B\": \"B\",\n" +
-                "            \"C\": \"C\"\n" +
+                "            \"__expiredDate\": \"2019-03-27T03:00:00.000+08:00\",\n" +
+                "            \"__startDate\": \"2019-03-27T00:00:00.000+08:00\",\n" +
+                "            \"categoryId\": \"\",\n" +
+                "            \"id\": \"5889257138\",\n" +
+                "            \"itemList\": [\n" +
+                "                {\n" +
+                "                    \"id\": \"8477823502701\",\n" +
+                "                    \"voucherId\": \"8477823502701\"\n" +
+                "                },\n" +
+                "                {\n" +
+                "                    \"id\": \"8388402518266\",\n" +
+                "                    \"voucherId\": \"8388402518266\"\n" +
+                "                },\n" +
+                "                {\n" +
+                "                    \"id\": \"8475223900988\",\n" +
+                "                    \"voucherId\": \"8475223900988\",\n" +
+                "                    \"test\": \"test\"\n" +
+                "                }\n" +
+                "            ]\n" +
                 "        },\n" +
                 "        {\n" +
-                "            \"C\": \"C\",\n" +
-                "            \"D\": \"D\"\n" +
-                "        },\n" +
-                "        {\n" +
-                "            \"E\": \"E\",\n" +
-                "            \"F\": {\n" +
-                "                \"G\": \"G\"\n" +
-                "            }\n" +
+                "            \"__expiredDate\": \"2019-03-27T06:00:00.000+08:00\",\n" +
+                "            \"__startDate\": \"2019-03-27T03:00:00.000+08:00\",\n" +
+                "            \"categoryId\": \"\",\n" +
+                "            \"id\": \"5889257139\",\n" +
+                "            \"itemList\": [\n" +
+                "                {\n" +
+                "                    \"id\": \"8395001966626\",\n" +
+                "                    \"voucherId\": \"8395001966626\"\n" +
+                "                },\n" +
+                "                {\n" +
+                "                    \"id\": \"8429604672093\",\n" +
+                "                    \"voucherId\": \"8429604672093\"\n" +
+                "                },\n" +
+                "                {\n" +
+                "                    \"id\": \"8387403610830\",\n" +
+                "                    \"voucherId\": \"8387403610830\",\n" +
+                "                    \"hello\": \"world\"\n" +
+                "                }\n" +
+                "            ]\n" +
                 "        }\n" +
                 "    ],\n" +
-                "    \"fast_open\": false,\n" +
-                "    \"local_address\": \"127.0.0.1\",\n" +
-                "    \"local_port\": 1080,\n" +
-                "    \"method\": \"aes-256-cfb\",\n" +
-                "    \"password\": \"pyj1234%\",\n" +
-                "    \"server\": \"0.0.0.0\",\n" +
-                "    \"server_port\": 8388,\n" +
-                "    \"test\": [\n" +
-                "        \"hello\",\n" +
-                "        \"world\"\n" +
-                "    ],\n" +
-                "    \"timeout\": 300,\n" +
-                "    \"workers\": 1\n" +
+                "    \"moduleId\": \"flashVoucher\",\n" +
+                "    \"pageId\": \"100556902\",\n" +
+                "    \"resourceCode\": \"icms-zebra-100556902-4106311\",\n" +
+                "    \"tagId\": \"timeList\"\n" +
                 "}";
 
         JSONObject jsonObject = JSONObject.parseObject(data, JSONObject.class, Feature.OrderedField);
@@ -271,12 +301,14 @@ public class JSONTree {
         JSONNode root = JSONTree.createDeduplicateJSONTree(jsonObject, "root", "#", 0);
 
         JSONObject schema = JSONObject.parseObject("{}", JSONObject.class, Feature.OrderedField);
-        schema.fluentPut("definitions", "{}");
+        schema.fluentPut("definitions", new JSONObject());
         schema.fluentPut("$schema", "http://json-schema.org/draft-07/schema#");
         assert root != null;
         createJSONSchema(root, schema, "");
-        System.out.println(schema.toJSONString());
+        schema.put("$id", "http://example.com/root.json");
+        System.out.println(JSON.toJSONString(schema, true));
 
+        System.out.println();
         List<JSONNode> list = JSONTree.depthFirstTraversal(root);
 
         assert list != null;
