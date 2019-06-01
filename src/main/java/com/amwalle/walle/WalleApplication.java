@@ -1,6 +1,5 @@
 package com.amwalle.walle;
 
-import com.amwalle.walle.raspi.camera.WebCamera;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -13,9 +12,5 @@ public class WalleApplication {
 
     public static void main(String[] args) throws IOException {
         SpringApplication.run(WalleApplication.class, args);
-        WebCamera webCamera = new WebCamera();
-
-        webCamera.forwardCameraVideo();
-//        webCamera.testForwardPic();
     }
 }
