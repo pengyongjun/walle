@@ -206,19 +206,26 @@ public class JSONTree {
         return nodeList;
     }
 
-    public static void createJSONSchema(JSONNode jsonNode, JSONObject jsonObject, String id) {
-        jsonObject.fluentPut("$id", id);
-        jsonObject.fluentPut("type", jsonNode.getDataType());
+    public static void createJSONSchema(JSONNode jsonNode, JSONObject schemaObject, String schemaId) {
+        schemaObject.fluentPut("$id", schemaId);
 
-        List<JSONNode> children = jsonNode.getChildren();
-
-        if (NodeType.Object.getJsonType().equals(jsonNode.getDataType())) {
-            id = id + "/properties/";
-        } else if (NodeType.Array.getJsonType().equals(jsonNode.getDataType())) {
-            id = id + "/";
+        // TODO 如果某个节点设置了 ref，则直接指定 $ref 属性
+        if ("".equals(jsonNode.getNodeName())){
+            schemaObject.put("$ref", "test");
+            return;
         }
 
-        JSONObject schema = JSONObject.parseObject("{}", JSONObject.class, Feature.OrderedField);
+        schemaObject.fluentPut("type", jsonNode.getDataType());
+
+        // 定义下一级 Schema 的 schema id 前缀
+        if (NodeType.Object.getJsonType().equals(jsonNode.getDataType())) {
+            schemaId = schemaId + "/properties/";
+        } else if (NodeType.Array.getJsonType().equals(jsonNode.getDataType())) {
+            schemaId = schemaId + "/";
+        }
+
+        List<JSONNode> children = jsonNode.getChildren();
+        JSONObject childrenSchema = JSONObject.parseObject("{}", JSONObject.class, Feature.OrderedField);
         if (children != null) {
             for (JSONNode node : children) {
                 // TODO 如果该节点不需要 Schema 配置，则舍弃该节点
@@ -227,19 +234,19 @@ public class JSONTree {
                 }
 
                 JSONObject childSchema = JSONObject.parseObject("{}", JSONObject.class, Feature.OrderedField);
-                createJSONSchema(node, childSchema, id + node.getNodeName());
-                schema.fluentPut(node.getNodeName(), childSchema);
+                createJSONSchema(node, childSchema, schemaId + node.getNodeName());
+                childrenSchema.fluentPut(node.getNodeName(), childSchema);
             }
         }
 
         // TODO 在这里区分子节点的类别，然后判断应该加入什么关键字
         if (NodeType.Object.getJsonType().equals(jsonNode.getDataType())) {
-            jsonObject.fluentPut("required", new JSONArray());
-            jsonObject.fluentPut("properties", schema);
+            schemaObject.fluentPut("required", new JSONArray());
+            schemaObject.fluentPut("properties", childrenSchema);
         } else if (NodeType.Array.getJsonType().equals(jsonNode.getDataType())) {
-            jsonObject.fluentPut("items", schema.get("items"));
+            schemaObject.fluentPut("items", childrenSchema.get("items"));
         } else {
-            jsonObject.fluentPut("pattern", "^(.*)$");
+            schemaObject.fluentPut("pattern", "^(.*)$");
         }
 
     }
