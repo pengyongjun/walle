@@ -7,9 +7,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
+import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.servlet.ModelAndView;
 
 @RestController
 @EnableAutoConfiguration
@@ -19,18 +21,28 @@ public class HelloWorldController {
     @Autowired
     private WalleJobManager jobManager;
 
-    @RequestMapping(value = "/walle", method = RequestMethod.GET)
-    public String helloWorld() {
+    @RequestMapping(value = "/schedule", method = RequestMethod.GET)
+    public String setSchedule() {
         logger.info("--------test-------");
-//        Mail.sendMail("test","test", "yongjun.peng@lazada.com");
         try {
             jobManager.startJob("0 0/1 * * * ?", "TestJob1", "TestJobGroup1", WalleJob.class);
-//            jobManager.resetJobCron("TestJob1","TestJobGroup1","0 0/2 * * * ?");
-            jobManager.triggerJob("TestJob1","TestJobGroup1");
+            jobManager.triggerJob("TestJob1", "TestJobGroup1");
         } catch (SchedulerException e) {
             logger.error(e.getMessage());
         }
 
         return "hello world";
+    }
+
+    @RequestMapping(value = "/index", method = RequestMethod.GET)
+    public ModelAndView index(Model model) {
+        logger.info(">>>>>>>>>>>> index >>>>>>>>>>>");
+        return new ModelAndView("index");
+    }
+
+    @RequestMapping(value = "/test", method = RequestMethod.GET)
+    public ModelAndView test(Model model) {
+        logger.info(">>>>>>>>>>>> test >>>>>>>>>>>");
+        return new ModelAndView("test");
     }
 }
