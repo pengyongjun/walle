@@ -2,6 +2,7 @@ package com.amwalle.walle.controller;
 
 import com.amwalle.walle.scheduler.WalleJobManager;
 import com.amwalle.walle.scheduler.WalleJob;
+import com.sun.org.apache.xpath.internal.operations.Mod;
 import org.quartz.SchedulerException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -64,7 +65,9 @@ public class HelloWorldController {
     @RequestMapping(value = "/testhello", method = RequestMethod.GET)
     public ModelAndView vm(Model model) {
         logger.info(" >>>>>>>>>>>>>> hello >>>>>>>>>>>>");
-        model.addAttribute("hello", "world");
-        return new ModelAndView("hello");
+        ModelAndView modelAndView = new ModelAndView("hello");
+        model.addAttribute("test", "world");
+        return modelAndView;
     }
+
 }
