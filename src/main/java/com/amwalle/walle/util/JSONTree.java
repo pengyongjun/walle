@@ -4,6 +4,7 @@ import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.alibaba.fastjson.parser.Feature;
+import org.springframework.util.StringUtils;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -209,9 +210,9 @@ public class JSONTree {
     public static void createJSONSchema(JSONNode jsonNode, JSONObject schemaObject, String schemaId) {
         schemaObject.fluentPut("$id", schemaId);
 
-        // TODO 如果某个节点设置了 ref，则直接指定 $ref 属性
-        if ("".equals(jsonNode.getNodeName())){
-            schemaObject.put("$ref", "test");
+        // 如果某个节点设置了 ref，则直接指定 $ref 属性
+        if (!StringUtils.isEmpty(jsonNode.getReference())){
+            schemaObject.put("$ref", jsonNode.getReference());
             return;
         }
 
@@ -228,8 +229,8 @@ public class JSONTree {
         JSONObject childrenSchema = JSONObject.parseObject("{}", JSONObject.class, Feature.OrderedField);
         if (children != null) {
             for (JSONNode node : children) {
-                // TODO 如果该节点不需要 Schema 配置，则舍弃该节点
-                if ("".equals(node.getNodeName())) {
+                // 如果该节点不需要 Schema 配置，则舍弃该节点
+                if (!node.isSchemaRequired()) {
                     continue;
                 }
 

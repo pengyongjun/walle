@@ -14,6 +14,8 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.ModelAndView;
 
+import java.util.Map;
+
 @RestController
 @EnableAutoConfiguration
 public class HelloWorldController {
@@ -47,9 +49,22 @@ public class HelloWorldController {
         return new ModelAndView("test");
     }
 
-    @RequestMapping(value = "/{test}", method = RequestMethod.GET)
-    public ModelAndView home(@PathVariable String test, Model model) {
+    @RequestMapping(value = "/pathVariable/{test}", method = RequestMethod.GET)
+    public ModelAndView pathVariable(@PathVariable String test, Model model) {
         logger.info(test);
         return new ModelAndView("index");
+    }
+
+    @RequestMapping(value = "/home", method = RequestMethod.GET)
+    public ModelAndView home(Model model) {
+        logger.info(">>>>>>>>>>>> home >>>>>>>>>>>");
+        return new ModelAndView("home");
+    }
+
+    @RequestMapping(value = "/testhello", method = RequestMethod.GET)
+    public ModelAndView vm(Model model) {
+        logger.info(" >>>>>>>>>>>>>> hello >>>>>>>>>>>>");
+        model.addAttribute("hello", "world");
+        return new ModelAndView("hello");
     }
 }

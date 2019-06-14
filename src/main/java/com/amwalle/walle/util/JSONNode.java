@@ -15,6 +15,11 @@ public class JSONNode {
 
     private List<JSONNode> children;
 
+    // This property is used for fulfill schema from definition
+    private String reference;
+
+    private boolean isSchemaRequired = true;
+
     public String getNodeName() {
         return nodeName;
     }
@@ -61,5 +66,21 @@ public class JSONNode {
 
     public void setChildren(List<JSONNode> children) {
         this.children = children;
+    }
+
+    public String getReference() {
+        return reference;
+    }
+
+    public void setReference(String reference) {
+        this.reference = reference;
+    }
+
+    public boolean isSchemaRequired() {
+        return isSchemaRequired;
+    }
+
+    public void setSchemaRequired(boolean schemaRequired) {
+        isSchemaRequired = schemaRequired;
     }
 }
