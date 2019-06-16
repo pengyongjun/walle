@@ -1,8 +1,7 @@
 package com.amwalle.walle.controller;
 
-import com.amwalle.walle.scheduler.WalleJobManager;
 import com.amwalle.walle.scheduler.WalleJob;
-import com.sun.org.apache.xpath.internal.operations.Mod;
+import com.amwalle.walle.scheduler.WalleJobManager;
 import org.quartz.SchedulerException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -15,12 +14,10 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.ModelAndView;
 
-import java.util.Map;
-
 @RestController
 @EnableAutoConfiguration
-public class HelloWorldController {
-    private static final Logger logger = LoggerFactory.getLogger(HelloWorldController.class);
+public class TestController {
+    private static final Logger logger = LoggerFactory.getLogger(TestController.class);
 
     @Autowired
     private WalleJobManager jobManager;

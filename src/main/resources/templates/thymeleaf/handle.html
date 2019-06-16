@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en"
+      xmlns:th="https://www.thymeleaf.org">
+
+<title>Test handle</title>
+
+<head>
+<body>
+<form action="#" th:action="@{/handle}" th:object="${jsonNode}" method="post">
+    <input id="test" type="text" th:field="*{nodeName}"/>
+    <td th:text="${nodeName}"></td>
+    <button id="fetch" type="submit">提交</button>
+</form>
+<button id="fetch1">test</button>
+
+</body>
+<script src="js/jquery-2.1.1.js"></script>
+
+<script language='javascript' th:inline="javascript">
+    $(function() {
+        $('#fetch').click(function() {
+            alert("hello");
+            var test = $('#test').val();
+            var request = new XMLHttpRequest();
+            request.open("POST", "/handle");
+            request.send(test)
+        });
+
+        $('#fetch1').click(function() {
+            var params = {};
+            params.test = $('#test').val();
+            $.ajax({
+                type: "POST",
+                url: "/change",
+                data: params,
+                success: function(data) {
+                    if (data.result == 'SUCCESS') {
+                        alert(data.hello);
+                        $('#test').val(data.hello);
+                    } else {
+                        alert("修改失败，失败原因: " + data);
+                    }
+                },
+                error: function(data) {
+                    alert(data.result);
+                }
+            });
+        });
+
+    });
+
+</script>
+
+</html>
