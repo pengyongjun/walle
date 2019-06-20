@@ -45,13 +45,18 @@ public class JSONSchemaController {
     @RequestMapping(value = "/analysisSchema", method = RequestMethod.POST)
     @ResponseBody
     public List<JSONNode> analysisSchema(String json) {
-        logger.info("json: " + json);
-
         JSONObject jsonObject = JSONObject.parseObject(json, JSONObject.class, Feature.OrderedField);
 
-        logger.info(JSON.toJSONString(jsonObject, true));
+        JSONTree jsonTree = new JSONTree();
+        JSONNode root = jsonTree.createDeduplicateJSONTree(jsonObject, "root", "#", 0);
 
-        JSONNode root = JSONTree.createDeduplicateJSONTree(jsonObject, "root", "#", 0);
-        return JSONTree.depthFirstTraversal(root);
+        JSONObject schema = JSONObject.parseObject("{}", JSONObject.class, Feature.OrderedField);
+        schema.fluentPut("definitions", new JSONObject());
+        schema.fluentPut("$schema", "http://json-schema.org/draft-07/schema#");
+        assert root != null;
+        jsonTree.createJSONSchema(root, schema, "");
+        schema.put("$id", "http://example.com/root.json");
+
+        return jsonTree.depthFirstTraversal(root);
     }
 }

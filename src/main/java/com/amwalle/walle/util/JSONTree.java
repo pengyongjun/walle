@@ -11,8 +11,8 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 
 public class JSONTree {
 
-    private static HashSet<String> pathSet = new HashSet<>();
-    private static HashMap<String, JSONNode> arrayNode = new HashMap<>();
+    private final HashSet<String> pathSet = new HashSet<>();
+    private final HashMap<String, JSONNode> arrayNode = new HashMap<>();
 
     /**
      * This method is used for creating a JSON Tree
@@ -23,7 +23,7 @@ public class JSONTree {
      * @param level    Node level
      * @return The node
      */
-    public static JSONNode createJSONTree(Object nodeData, String nodeName, String nodePath, int level) {
+    public JSONNode createJSONTree(Object nodeData, String nodeName, String nodePath, int level) {
         JSONNode node = new JSONNode();
         node.setNodeName(nodeName);
         node.setNodePath(nodePath);
@@ -79,7 +79,7 @@ public class JSONTree {
      * @param level    Node level
      * @return Node
      */
-    public static JSONNode createDeduplicateJSONTree(Object nodeData, String nodeName, String nodePath, int level) {
+    public JSONNode createDeduplicateJSONTree(Object nodeData, String nodeName, String nodePath, int level) {
         JSONNode node = new JSONNode();
         node.setNodeName(nodeName);
         node.setNodePath(nodePath);
@@ -155,7 +155,7 @@ public class JSONTree {
         return node;
     }
 
-    public static List<JSONNode> levelTraversal(JSONNode rootNode) {
+    public List<JSONNode> levelTraversal(JSONNode rootNode) {
         if (rootNode == null) {
             return null;
         }
@@ -179,7 +179,7 @@ public class JSONTree {
         return nodeList;
     }
 
-    public static List<JSONNode> depthFirstTraversal(JSONNode rootNode) {
+    public List<JSONNode> depthFirstTraversal(JSONNode rootNode) {
         if (rootNode == null) {
             return null;
         }
@@ -207,8 +207,9 @@ public class JSONTree {
         return nodeList;
     }
 
-    public static void createJSONSchema(JSONNode jsonNode, JSONObject schemaObject, String schemaId) {
+    public void createJSONSchema(JSONNode jsonNode, JSONObject schemaObject, String schemaId) {
         schemaObject.fluentPut("$id", schemaId);
+        jsonNode.setSchemaId(schemaId);
 
         // 如果某个节点设置了 ref，则直接指定 $ref 属性
         if (!StringUtils.isEmpty(jsonNode.getReference())){
@@ -305,19 +306,20 @@ public class JSONTree {
                 "}";
 
         JSONObject jsonObject = JSONObject.parseObject(data, JSONObject.class, Feature.OrderedField);
+        JSONTree jsonTree = new JSONTree();
 
-        JSONNode root = JSONTree.createDeduplicateJSONTree(jsonObject, "root", "#", 0);
+        JSONNode root = jsonTree.createDeduplicateJSONTree(jsonObject, "root", "#", 0);
 
         JSONObject schema = JSONObject.parseObject("{}", JSONObject.class, Feature.OrderedField);
         schema.fluentPut("definitions", new JSONObject());
         schema.fluentPut("$schema", "http://json-schema.org/draft-07/schema#");
         assert root != null;
-        createJSONSchema(root, schema, "");
+        jsonTree.createJSONSchema(root, schema, "");
         schema.put("$id", "http://example.com/root.json");
         System.out.println(JSON.toJSONString(schema, true));
 
         System.out.println();
-        List<JSONNode> list = JSONTree.depthFirstTraversal(root);
+        List<JSONNode> list = jsonTree.depthFirstTraversal(root);
 
         assert list != null;
         for (JSONNode jsonNode : list) {

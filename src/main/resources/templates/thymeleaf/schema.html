@@ -517,6 +517,9 @@
                 return alert("Cannot eval JSON: " + error);
             }
 
+            <!-- 清空解析结果 -->
+            $('#json-analysis-result').empty();
+
             var params = {};
             params.json = $('#original').val();
 
@@ -534,7 +537,7 @@
                     <!-- 将后端返回的List展示在解析结果中 -->
                     for(i = 0; i < nodeList.length; i++) {
                         <!--alert(node.level * 24);-->
-                        $('#json-analysis-result').append("<p style=\"padding-left: " + (nodeList[i].level * 24) + "px;\">" + nodeList[i].nodePath + "</p>");
+                        $('#json-analysis-result').append("<p style=\"padding-left: " + (nodeList[i].level * 24) + "px;\">" + nodeList[i].schemaId + "</p>");
                     }
                 },
                 error: function(data) {

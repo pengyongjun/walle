@@ -15,6 +15,8 @@ public class JSONNode {
 
     private List<JSONNode> children;
 
+    private String schemaId;
+
     // This property is used for fulfill schema from definition
     private String reference;
 
@@ -66,6 +68,14 @@ public class JSONNode {
 
     public void setChildren(List<JSONNode> children) {
         this.children = children;
+    }
+
+    public String getSchemaId() {
+        return schemaId;
+    }
+
+    public void setSchemaId(String schemaId) {
+        this.schemaId = schemaId;
     }
 
     public String getReference() {
