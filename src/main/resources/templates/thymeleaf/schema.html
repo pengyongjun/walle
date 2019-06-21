@@ -18,7 +18,11 @@
     <link href="css/animate.css" rel="stylesheet">
     <link href="css/style.css" rel="stylesheet">
 
+    <!-- JSON Viewer -->
     <link href="css/jquery.json-viewer.css" rel="stylesheet">
+
+    <link href="css/plugins/iCheck/custom.css" rel="stylesheet">
+    <link href="css/plugins/awesome-bootstrap-checkbox/awesome-bootstrap-checkbox.css" rel="stylesheet">
 
 </head>
 
@@ -431,7 +435,7 @@
                     </div>
                     <textarea class="form-control" id="original" rows="20"
                               placeholder="Please input JSON data here ..."></textarea>
-                    <pre id="json-renderer" style="display: none;"></pre>
+                    <pre id="json-renderer" style="display: none; background-color: #ffffff"></pre>
                 </div>
 
                 <div class="col-lg-4">
@@ -441,17 +445,17 @@
                             <button id="btn-json-generate-schema" class="btn btn-info" title="">生成 Schema</button>
                         </div>
                     </div>
-                    <pre id="json-analysis-result"></pre>
+                    <pre id="json-analysis-result" style="background-color: #ffffff"></pre>
                 </div>
 
                 <div class="col-lg-4">
                     <div class="ibox-title">
                         <h5>JSON Schema</h5>
                         <div class="ibox-tools">
-                            <button id="btn-json-schema-copy" class="btn btn-info" title="">复制 Schema</button>
+                            <button id="btn-json-schema-copy" class="btn btn-info" title="" >复制 Schema</button>
                         </div>
                     </div>
-                    <pre></pre>
+                    <pre id="json-schema" style="background-color: #ffffff"></pre>
                 </div>
             </div>
             <!-- End -->
@@ -480,7 +484,20 @@
 <script src="js/inspinia.js"></script>
 <script src="js/plugins/pace/pace.min.js"></script>
 
+<!-- JSON viewer -->
 <script src="js/jquery.json-viewer.js"></script>
+
+<!-- iCheck -->
+<!-- iCheck -->
+<script src="js/plugins/iCheck/icheck.min.js"></script>
+<script>
+    $(document).ready(function () {
+        $('.i-checks').iCheck({
+            checkboxClass: 'icheckbox_square-green',
+            radioClass: 'iradio_square-green',
+        });
+    });
+</script>
 
 <script type="text/javascript">
     $(function() {
@@ -536,9 +553,27 @@
 
                     <!-- 将后端返回的List展示在解析结果中 -->
                     for(i = 0; i < nodeList.length; i++) {
-                        <!--alert(node.level * 24);-->
-                        $('#json-analysis-result').append("<p style=\"padding-left: " + (nodeList[i].level * 24) + "px;\">" + nodeList[i].schemaId + "</p>");
+                        <!--$('#json-analysis-result').append("<p style=\"padding-left: " + (nodeList[i].level * 24) + "px;\">" + nodeList[i].schemaId + "</p>");-->
+                        $('#json-analysis-result').append(function(){
+                            <!--var addItem = "<div style=\"padding-left: " + (nodeList[i].level * 24) + "px;\">" + nodeList[i].nodePath + "</div>";-->
+                            <!--var nodeInnerHtml = "<div class=\"i-checks\" style=\"padding-left: " + (nodeList[i].level * 24) + "px;\">" +-->
+                                                <!--"<label class=\"\"> <div class=\"icheckbox_square-green\" style=\"position: relative;\">" +-->
+                                                <!--"<input type=\"checkbox\" value=\"\" style=\"position: absolute; opacity: 0;\">" +-->
+                                                <!--"<ins class=\"iCheck-helper\" style=\"position: absolute; top: 0%; left: 0%; display: block;" +-->
+                                                <!--" width: 100%; height: 100%; margin: 0px; padding: 0px; background: rgb(255, 255, 255); border: 0px; opacity: 0;\">" +-->
+                                                <!--"</ins></div> <i></i>" +  nodeList[i].nodePath + "</label></div>";-->
+
+                            var nodeInnerHtml = "<div class=\"i-checks\" style=\"padding-left: " + (nodeList[i].level * 24) + "px;\">" +
+                                                "<label> <input type=\"checkbox\" value=\"\"> <i></i> " + nodeList[i].nodePath +
+                                                "&nbsp;<span class=\"label label-warning\" font-size=\"13px\"> " + nodeList[i].dataType + "</span></label></div>";
+                            return nodeInnerHtml;
+                        });
                     }
+
+                    $('.i-checks').iCheck({
+                        checkboxClass: 'icheckbox_square-green',
+                        radioClass: 'iradio_square-green',
+                    });
                 },
                 error: function(data) {
                     alert(data.result);
