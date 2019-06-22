@@ -7,10 +7,7 @@ import com.amwalle.walle.util.JSONNode;
 import com.amwalle.walle.util.JSONTree;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.ResponseBody;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.ModelAndView;
 
 import java.util.HashMap;
@@ -58,5 +55,31 @@ public class JSONSchemaController {
         schema.put("$id", "http://example.com/root.json");
 
         return jsonTree.depthFirstTraversal(root);
+    }
+
+    @RequestMapping(value = "/generateSchema", method = RequestMethod.POST)
+    @ResponseBody
+    public String generateSchema(@RequestBody String params) {
+        JSONObject paramObject = JSON.parseObject(params);
+
+        String json = (String) paramObject.get("json");
+        List<Boolean> nodeList = (List<Boolean>) paramObject.get("nodeList");
+        JSONObject jsonObject = JSONObject.parseObject(json, JSONObject.class, Feature.OrderedField);
+
+        JSONTree jsonTree = new JSONTree();
+        JSONNode root = jsonTree.createDeduplicateJSONTree(jsonObject, "root", "#", 0);
+        List<JSONNode> list = jsonTree.depthFirstTraversal(root);
+        for (int index = 0; index < list.size(); index++) {
+            list.get(index).setSchemaRequired(nodeList.get(index));
+        }
+
+        JSONObject schema = JSONObject.parseObject("{}", JSONObject.class, Feature.OrderedField);
+        schema.fluentPut("definitions", new JSONObject());
+        schema.fluentPut("$schema", "http://json-schema.org/draft-07/schema#");
+        assert root != null;
+        jsonTree.createJSONSchema(root, schema, "");
+        schema.fluentPut("$id", "http://example.com/root.json");
+
+        return JSON.toJSONString(schema, true);
     }
 }

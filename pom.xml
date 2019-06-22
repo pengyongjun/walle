@@ -38,11 +38,6 @@
             <scope>test</scope>
         </dependency>
 
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-velocity</artifactId>
-        </dependency>
-
         <!-- log4j -->
         <dependency>
             <groupId>org.slf4j</groupId>

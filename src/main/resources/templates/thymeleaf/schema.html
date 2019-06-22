@@ -434,7 +434,8 @@
                         </div>
                     </div>
                     <textarea class="form-control" id="original" rows="20"
-                              placeholder="Please input JSON data here ..."></textarea>
+                              placeholder="Please input JSON data here ..."
+                              style="white-space:nowrap; overflow:scroll;"></textarea>
                     <pre id="json-renderer" style="display: none; background-color: #ffffff"></pre>
                 </div>
 
@@ -445,17 +446,21 @@
                             <button id="btn-json-generate-schema" class="btn btn-info" title="">生成 Schema</button>
                         </div>
                     </div>
-                    <pre id="json-analysis-result" style="background-color: #ffffff"></pre>
+                    <pre id="json-analysis-result" style="background-color: #ffffff" aria-rowcount=""></pre>
                 </div>
 
                 <div class="col-lg-4">
                     <div class="ibox-title">
                         <h5>JSON Schema</h5>
                         <div class="ibox-tools">
-                            <button id="btn-json-schema-copy" class="btn btn-info" title="">复制 Schema</button>
+                            <button id="btn-json-schema-copy" class="btn btn-white"
+                                    data-clipboard-target="#json-schema"><i class="fa fa-copy"></i> Copy
+                            </button>
                         </div>
                     </div>
-                    <pre id="json-schema" style="background-color: #ffffff"></pre>
+                    <!--<pre id="json-schema" contenteditable="true" style="background-color: #ffffff"></pre>-->
+                    <textarea class="form-control" id="json-schema" contenteditable="true" rows="20"
+                              style="background-color: #ffffff; white-space:nowrap; overflow:scroll;"></textarea>
                 </div>
             </div>
             <!-- End -->
@@ -487,21 +492,27 @@
 <!-- JSON viewer -->
 <script src="js/jquery.json-viewer.js"></script>
 
-<!-- iCheck -->
+<!-- Clipboard -->
+<script src="js/plugins/clipboard/clipboard.min.js"></script>
+
 <!-- iCheck -->
 <script src="js/plugins/iCheck/icheck.min.js"></script>
 <script>
     $(document).ready(function () {
-        <!--$('.i-checks').iCheck({-->
-            <!--checkboxClass: 'icheckbox_square-green',-->
-            <!--radioClass: 'iradio_square-green',-->
-        <!--});-->
+        new Clipboard('.btn');
+
+        $('.i-checks').iCheck({
+            checkboxClass: 'icheckbox_square-green',
+            radioClass: 'iradio_square-green',
+        });
     });
+
 
 </script>
 
 <script type="text/javascript">
     $(function() {
+        <!--接收原始 JSON 数据输入-->
         $('#btn-json-viewer').click(function() {
             try {
                 var input = eval('(' + $('#original').val() + ')');
@@ -526,8 +537,26 @@
             $('#btn-json-viewer').show();
         });
 
-        var nodeList;
+        <!--失去焦点的时候格式化 JSON 数据-->
+        $('#original').blur(function() {
+            var input;
+            try {
+                if ($('#original').val().length == 0) {
+                        return;
+                }
 
+                input = eval('(' + $('#original').val() + ')');
+            } catch (error) {
+                return alert("Input data is not valid JSON, please check. Error: " + error);
+            }
+
+            $('#original').val(JSON.stringify(input, null, 4));
+        });
+
+        var nodeList;
+        var json;
+
+        <!-- 解析 JSON -->
         $('#btn-json-resolver').click(function() {
             try {
                 var input = eval('(' + $('#original').val() + ')');
@@ -539,6 +568,7 @@
             $('#json-analysis-result').empty();
 
             var params = {};
+            json = $('#original').val();
             params.json = $('#original').val();
 
             $.ajax({
@@ -551,13 +581,12 @@
                     }
 
                     nodeList = data;
-                    console.log()
 
                     <!-- 将后端返回的List展示在解析结果中 -->
                     for(i = 0; i < nodeList.length; i++) {
                         $('#json-analysis-result').append(function(){
                         var nodeInnerHtml = "<div class=\"i-checks\" style=\"padding-left: " + (nodeList[i].level * 24) + "px;\" data-level=\"" + (nodeList[i].level) +"\" >" +
-                                            "<label class=\"hello\"> <input type=\"checkbox\" value=\"\"> <i></i> " + nodeList[i].nodePath +
+                                            "<label class=\"\"> <input type=\"checkbox\" value=\"\"> <i></i> " + nodeList[i].nodePath +
                                             "&nbsp;<span class=\"label label-warning\" font-size=\"13px\"> " + nodeList[i].dataType + "</span></label></div>";
                             return nodeInnerHtml;
                         });
@@ -568,26 +597,52 @@
                         radioClass: 'iradio_square-green',
                     });
 
-                    $('.i-checks').on('ifChecked', (e) => {
+                    $('.i-checks').on('ifClicked', (e) => {
                         var currentTarget = e.currentTarget;
                         var $ele = $(currentTarget);
-                        var level = +($ele.data('level'));
-                        var $parent = $ele;
-                        while(level > 0) {
-                            level--;
-                            while(true){
-                               $parent = $parent.prev();
+
+                        var target = e.target;
+                        var $targetEle = $(target);
+
+                        if($targetEle.context.checked === false) {
+                            <!-- 节点被选中的时候 -->
+
+                            <!-- 选中所有子节点 -->
+                            var level = +($ele.data('level'));
+                            var $child = $ele.next();
+                            while( +($child.data('level')) > level) {
+                                $child.iCheck('check');
+                                $child = $child.next();
+                            }
+
+                            <!-- 选中所有父级节点 -->
+                            level = +($ele.data('level'));
+                            var $parent = $ele;
+                            while(level > 0) {
+                                level--;
+                                while(true){
+                                    $parent = $parent.prev();
                                     if (+($parent.data('level')) === level) {
                                         break;
                                     }
-                             }
-                            console.log($parent);
-                            $parent.iCheck('check');
+                                 }
+                                <!--console.log($parent);-->
+                                $parent.iCheck('check');
+                            }
+                        } else {
+                            <!-- 节点被取消选中的时候 -->
+
+                            <!-- 取消选中所有子节点 -->
+                            var level = +($ele.data('level'));
+                            var $child = $ele.next();
+                            while( +($child.data('level')) > level) {
+                                $child.iCheck('uncheck');
+                                $child = $child.next();
+                            }
                         }
-                    });
-                    $('.i-checks').on('ifUnchecked', (e) => {
 
                     });
+
                 },
                 error: function(data) {
                     alert(data.result);
@@ -595,7 +650,57 @@
             });
         });
 
+        <!--生成 Schema-->
+        $('#btn-json-generate-schema').click(function() {
+            <!-- 获取解析结果选择状态 -->
+            var result = $('#json-analysis-result input');
+
+            if(result.length == 0) {
+                alert("生成Schema之前，请先点击\"解析\"!");
+                return;
+            }
+
+            var params = {};
+            params.nodeList = new Array(result.length);
+            for(var index = 0; index < result.length; index++) {
+                params.nodeList[index] = result[index].checked;
+            }
+
+            params.json = json;
+            $.ajax({
+                type: "POST",
+                url: "/generateSchema",
+                data: JSON.stringify(params),
+                contentType : 'application/json',
+                success: function(data) {
+                    var schema = eval('(' + data + ')');
+                    <!--$('#json-schema').jsonViewer(schema, {collapsed: false, withQuotes: true, withLinks: false});-->
+                    $('#json-schema').val(JSON.stringify(schema, null, 4));
+                },
+                error: function(data) {
+                    alert("Failed to generate JSON schema, error: " + data);
+                }
+            });
+        });
+
+        <!--失去焦点的时候格式化 JSON Schema-->
+        $('#json-schema').blur(function() {
+            var input;
+            try {
+                if ($('#json-schema').val().length == 0) {
+                    return;
+                }
+
+                input = eval('(' + $('#json-schema').val() + ')');
+            } catch (error) {
+                return alert("Input data is not valid JSON, please check. Error: " + error);
+            }
+
+            $('#json-schema').val(JSON.stringify(input, null, 4));
+        });
+
     });
+
 
 </script>
 
