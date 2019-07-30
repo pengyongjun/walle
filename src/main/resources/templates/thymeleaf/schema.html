@@ -245,14 +245,22 @@
                     <div class="ibox-title">
                         <h5>JSON Schema</h5>
                         <div class="ibox-tools">
-                            <button id="btn-json-schema-copy" class="btn btn-white"
-                                    data-clipboard-target="#json-schema"><i class="fa fa-copy"></i> Copy
-                            </button>
+                            <!--<button id="btn-json-schema-copy" class="btn btn-white"-->
+                                    <!--data-clipboard-target="#json-schema"><i class="fa fa-copy"></i> Copy-->
+                            <!--</button>-->
                         </div>
                     </div>
                     <!--<pre id="json-schema" contenteditable="true" style="background-color: #ffffff"></pre>-->
-                    <textarea class="form-control" id="json-schema" contenteditable="true" rows="20"
-                              style="background-color: #ffffff; white-space:nowrap; overflow:scroll;"></textarea>
+                    <!--<textarea class="form-control" id="json-schema" contenteditable="true" rows="20"-->
+                              <!--style="background-color: #ffffff; white-space:nowrap; overflow:scroll;"></textarea>-->
+                    <div class="ibox-content" style="height: 700px">
+                        <style type="text/css" media="screen">
+                            #editor {
+                                height: 650px;
+                            }
+                        </style>
+                        <div id="editor"></div>
+                    </div>
                 </div>
             </div>
             <!-- End -->
@@ -289,6 +297,8 @@
 
 <!-- iCheck -->
 <script src="js/plugins/iCheck/icheck.min.js"></script>
+
+<script type="text/javascript" src="/js/ace/ace.js"></script>
 <script>
     $(document).ready(function () {
         new Clipboard('.btn');
@@ -299,6 +309,13 @@
         });
     });
 
+    var editor = ace.edit("editor");
+    editor.setOptions({
+        mode: 'ace/mode/json',
+        theme: 'ace/theme/twilight',
+        tabSize: 2,
+        wrap: true,
+    })
 
 </script>
 
@@ -366,7 +383,8 @@
             $.ajax({
                 type: "POST",
                 url: "/analysisSchema",
-                data: params,
+                data: JSON.stringify(params),
+                contentType : 'application/json',
                 success: function(data) {
                     if(data.length == 0) {
                         alert("The result is empty, please check input!");
@@ -466,8 +484,8 @@
                 contentType : 'application/json',
                 success: function(data) {
                     var schema = eval('(' + data + ')');
-                    <!--$('#json-schema').jsonViewer(schema, {collapsed: false, withQuotes: true, withLinks: false});-->
-                    $('#json-schema').val(JSON.stringify(schema, null, 4));
+
+                    editor.setValue(JSON.stringify(schema, null, '\t'));
                 },
                 error: function(data) {
                     alert("Failed to generate JSON schema, error: " + data);
