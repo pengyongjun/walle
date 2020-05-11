@@ -71,7 +71,7 @@
         <dependency>
             <groupId>org.springframework</groupId>
             <artifactId>spring-tx</artifactId>
-            <version>4.1.6.RELEASE</version>
+            <version>5.0.9.RELEASE</version>
         </dependency>
         <!-- 该依赖里面有spring对schedule的支持 -->
         <dependency>
