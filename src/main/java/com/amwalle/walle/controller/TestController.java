@@ -14,6 +14,9 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.ModelAndView;
 
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
 @RestController
 @EnableAutoConfiguration
 public class TestController {
@@ -67,4 +70,8 @@ public class TestController {
         return modelAndView;
     }
 
+    @RequestMapping("/ats/callback")
+    public void atsTask(HttpServletRequest request, HttpServletResponse response) {
+        logger.info(String.valueOf(request.getParameterMap()));
+    }
 }
