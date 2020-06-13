@@ -1,5 +1,6 @@
 package com.amwalle.walle.controller;
 
+import com.amwalle.walle.bean.SpringInActionBean;
 import com.amwalle.walle.scheduler.WalleJob;
 import com.amwalle.walle.scheduler.WalleJobManager;
 import org.quartz.SchedulerException;
@@ -22,8 +23,14 @@ public class TestController {
     @Autowired
     private WalleJobManager jobManager;
 
+    @Autowired
+    SpringInActionBean springInActionBean;
+
     @RequestMapping(value = "/schedule", method = RequestMethod.GET)
     public String setSchedule() {
+
+
+        springInActionBean.sayHi("world");
         logger.info("--------test-------");
         try {
             jobManager.startJob("0 0/1 * * * ?", "TestJob1", "TestJobGroup1", WalleJob.class);
