@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en"
+      xmlns:th="https://www.thymeleaf.org">
+
+<head>
+
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Get Module Data</title>
+
+    <link href="css/bootstrap.min.css" rel="stylesheet">
+    <link href="font-awesome/css/font-awesome.css" rel="stylesheet">
+
+    <!-- Toastr style -->
+    <link href="css/plugins/toastr/toastr.min.css" rel="stylesheet">
+
+    <link href="css/animate.css" rel="stylesheet">
+    <link href="css/style.css" rel="stylesheet">
+
+    <!-- JSON Viewer -->
+    <link href="css/jquery.json-viewer.css" rel="stylesheet">
+
+    <link href="css/plugins/iCheck/custom.css" rel="stylesheet">
+    <link href="css/plugins/awesome-bootstrap-checkbox/awesome-bootstrap-checkbox.css" rel="stylesheet">
+
+</head>
+
+<body>
+
+<div id="wrapper">
+
+    <nav class="navbar-default navbar-static-side" role="navigation">
+        <div class="sidebar-collapse">
+            <ul class="nav metismenu" id="side-menu">
+                <li class="nav-header">
+                    <div class="dropdown profile-element">
+                        <a class="dropdown-toggle" href="/">
+                                <span class="clear">
+                                    <span class="block m-t-xs">
+                                        <strong
+                                                class="font-bold"
+                                                style="font-size: 30px;text-shadow: 5px 5px 5px black, 0px 0px 2px black;color: white;">Regulus
+                                        </strong>
+                                 </span>
+                                </span>
+                        </a>
+                    </div>
+                </li>
+                <li>
+                    <a href="/campaign.htm"><i class="fa fa-diamond"></i> <span class="nav-label">Campaign Center</span></a>
+                </li>
+                <li>
+                    <a href="/campaign/moduleConfig.htm"><i class="fa fa-edit"></i> <span class="nav-label">ICMS Module Config</span></a>
+                </li>
+                <li>
+                    <a href="#"><i class="fa fa-bolt"></i> <span class="nav-label">Campaign Creation</span><span
+                            class="fa arrow"></span></a>
+                    <ul class="nav nav-second-level">
+                        <li><a href="/ucmptools/createMaster.htm">Master Campaign</a></li>
+                        <li><a href="/ucmptools/createChild.htm">Child Campaign</a></li>
+                        <li><a href="/ucmptools/createVoucher.htm">Voucher Campaign</a></li>
+                    </ul>
+                </li>
+                <li class="active">
+                    <a href="#"><i class="fa fa-th-large"></i> <span class="nav-label">Campaign Tools </span><span
+                            class="fa arrow"></span></a>
+                    <ul class="nav nav-second-level">
+                        <li><a href="/schema">JSON Schema Helper</a></li>
+                        <li class="active"><a href="/JSONValidator">Reformat JSON</a></li>
+                    </ul>
+                </li>
+            </ul>
+
+        </div>
+    </nav>
+
+    <div id="page-wrapper" class="gray-bg">
+        <div class="row wrapper border-bottom white-bg page-heading">
+            <div class="col-lg-10" style="margin-top: 10px">
+                <h4>Get Module Data
+                    &nbsp;
+                    <span class="label label-info">Beta</span>
+                </h4>
+                <strong>作用: &nbsp;</strong>解析OSS数据为模块 TAG 模式：输入页面OSS数据、moduleId；返回模块级别的OSS数据<br>
+            </div>
+        </div>
+
+        <div class="wrapper wrapper-content  animated fadeInRight">
+            <!-- Start -->
+            <div class="row">
+                <div class="col-lg-6">
+                    <div class="ibox-title">
+                        <h5>OSS Data</h5>
+                        <div class="ibox-tools form-inline" style="margin-top: -10px">
+                            <label class="">Module ID</label>
+                            <input class="form-control" type="text" placeholder="module id" id="moduleId" style="margin-right: 10px">
+                            <button id="btn-reformat" class="btn btn-info" title="">提取模块数据</button>
+                        </div>
+                    </div>
+                    <div class="ibox-content" style="height: 700px">
+                        <style type="text/css" media="screen">
+                                #ossData {
+                                    height: 650px;
+                                }
+                        </style>
+                        <div id="ossData"></div>
+                    </div>
+                </div>
+
+                <div class="col-lg-6">
+                    <div class="ibox-title">
+                        <h5>Module Data</h5>
+                    </div>
+                    <div class="ibox-content" style="height: 700px">
+                        <style type="text/css" media="screen">
+                                #moduleData {
+                                    height: 650px;
+                                }
+                        </style>
+                        <div id="moduleData"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- End -->
+        <div class="footer">
+            <div class="pull-right">
+                10GB of <strong>250GB</strong> Free.
+            </div>
+            <div>
+                <strong>Copyright</strong> Example Company &copy; 2014-2015
+            </div>
+        </div>
+    </div>
+
+</div>
+
+
+<!-- Mainly scripts -->
+<script src="js/jquery-2.1.1.js"></script>
+<script src="js/bootstrap.min.js"></script>
+<script src="js/plugins/metisMenu/jquery.metisMenu.js"></script>
+<script src="js/plugins/slimscroll/jquery.slimscroll.min.js"></script>
+
+<!-- Custom and plugin javascript -->
+<script src="js/inspinia.js"></script>
+<script src="js/plugins/pace/pace.min.js"></script>
+
+<!-- JSON viewer -->
+<script src="js/jquery.json-viewer.js"></script>
+
+<!-- Clipboard -->
+<script src="js/plugins/clipboard/clipboard.min.js"></script>
+
+<!-- iCheck -->
+<script src="js/plugins/iCheck/icheck.min.js"></script>
+
+<script type="text/javascript" src="/js/ace/ace.js"></script>
+<script>
+    var ossData = ace.edit("ossData");
+    ossData.setOptions({
+        mode: 'ace/mode/json',
+        theme: 'ace/theme/twilight',
+        tabSize: 2,
+        wrap: true,
+    })
+
+    var moduleData = ace.edit("moduleData");
+    moduleData.setOptions({
+        mode: 'ace/mode/json',
+        theme: 'ace/theme/twilight',
+        tabSize: 2,
+        wrap: true,
+    })
+</script>
+
+<script type="text/javascript">
+    $(function() {
+        <!--点击提取-->
+        $('#btn-reformat').click(function() {
+            var ossDataEle = ace.edit('ossData');
+            var moduleDataEle = ace.edit('moduleData');
+
+            var ossData = ossDataEle.session.getValue();
+            try {
+                eval('(' + ossData + ')');
+            } catch (error) {
+                return alert("Cannot eval JSON: " + error);
+            }
+
+            var moduleId = $('#moduleId').val();
+            if (moduleId.length == 0) {
+                alert("Module Id should not be empty");
+                return;
+            }
+
+            var params = {};
+            params.ossData = ossData;
+            params.moduleId = moduleId;
+
+            $.ajax({
+                type: "POST",
+                url: "/doReformat",
+                data: JSON.stringify(params),
+                contentType : 'application/json',
+                success: function(data) {
+                    if (data.result == "failed") {
+                        alert(data.message);
+                        return;
+                    }
+                    moduleDataEle.session.setValue(JSON.stringify(eval('(' + data.message + ')'), null, '\t'));
+                },
+                error: function(data) {
+                    console.log(data);
+                }
+            });
+        });
+    });
+</script>
+
+</body>
+
+</html>
+
+<!-- Localized -->

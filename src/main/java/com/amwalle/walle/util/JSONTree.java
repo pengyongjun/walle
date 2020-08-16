@@ -13,6 +13,7 @@ public class JSONTree {
 
     private final HashSet<String> pathSet = new HashSet<>();
     private final HashMap<String, JSONNode> arrayNode = new HashMap<>();
+    private final LinkedHashMap<String, JSONObject> schemaRecord = new LinkedHashMap<>();
 
     /**
      * This method is used for creating a JSON Tree
@@ -212,7 +213,7 @@ public class JSONTree {
         jsonNode.setSchemaId(schemaId);
 
         // 如果某个节点设置了 ref，则直接指定 $ref 属性
-        if (!StringUtils.isEmpty(jsonNode.getReference())){
+        if (!StringUtils.isEmpty(jsonNode.getReference())) {
             schemaObject.put("$ref", jsonNode.getReference());
             return;
         }
@@ -241,12 +242,27 @@ public class JSONTree {
             }
         }
 
-        // TODO 在这里区分子节点的类别，然后判断应该加入什么关键字
+        // 在这里区分子节点的类别，然后判断应该加入什么关键字
         if (NodeType.Object.getJsonType().equals(jsonNode.getDataType())) {
             schemaObject.fluentPut("required", new JSONArray());
-            schemaObject.fluentPut("properties", childrenSchema);
+
+            // 节点做合并处理：如果某节点已经存在，那么再有子节点时，子节点Schema加入已有Schema下面
+            if (schemaRecord.containsKey(jsonNode.getSchemaId())) {
+                JSONObject jsonObject = schemaRecord.get(jsonNode.getSchemaId());
+                for (String key : childrenSchema.keySet()) {
+                    jsonObject.fluentPut(key, childrenSchema.get(key));
+                }
+                schemaObject.fluentPut("properties", jsonObject);
+                schemaRecord.put(jsonNode.getSchemaId(), jsonObject);
+            } else {
+                schemaObject.fluentPut("properties", childrenSchema);
+                schemaRecord.put(jsonNode.getSchemaId(), childrenSchema);
+            }
+
         } else if (NodeType.Array.getJsonType().equals(jsonNode.getDataType())) {
             schemaObject.fluentPut("items", childrenSchema.get("items"));
+        } else if (NodeType.Null.getJsonType().equals(jsonNode.getDataType())) {
+            schemaObject.fluentPut("pattern", null);
         } else {
             schemaObject.fluentPut("pattern", "^(.*)$");
         }
@@ -314,7 +330,7 @@ public class JSONTree {
         schema.fluentPut("definitions", new JSONObject());
         schema.fluentPut("$schema", "http://json-schema.org/draft-07/schema#");
         assert root != null;
-        jsonTree.createJSONSchema(root, schema, "");
+        jsonTree.createJSONSchema(root, schema, "#");
         schema.put("$id", "http://example.com/root.json");
         System.out.println(JSON.toJSONString(schema, true));
 

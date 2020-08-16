@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>hello</title>
+    
+    <link type="text/css" href="css/bootstrap.min.css" rel="stylesheet">
+    <link type="text/css" href="font-awesome/css/font-awesome.css" rel="stylesheet">
+
+    <link type="text/css" href="css/animate.css" rel="stylesheet">
+    <link type="text/css" href="css/style.css" rel="stylesheet">
+
+    <link type="text/css" href="css/plugins/awesome-bootstrap-checkbox/awesome-bootstrap-checkbox.css" rel="stylesheet">
+</head>
+<body>
+    <div id="page-wrapper" class="gray-bg">
+        <div class="input-group m-b form-group" style="text-align: right">
+            <div class="input-group-btn">
+                <button data-toggle="dropdown" class="btn btn-white dropdown-toggle" type="button"> Build Progress <span class="caret"></span></button>
+                <ul class="dropdown-menu">
+                    <li class="options"><a>Build Progress</a></li>
+                    <li class="divider"></li>
+                    <li class="options"><a>Build Progress &gt;</a></li>
+                    <li class="options"><a>Build Progress =</a></li>
+                    <li class="options"><a>Build Progress &lt;</a></li>
+                </ul>
+            </div>
+            <input type="text" class="form-control" style="width: 50px">
+        </div>
+        <div class="input-group m-b form-group" style="text-align: right">
+            <div class="input-group-btn">
+                <button data-toggle="dropdown" class="btn btn-white dropdown-toggle" type="button"> URL Check Result <span class="caret"></span></button>
+                <ul class="dropdown-menu">
+                    <li class="options"><a>URL Check Result</a></li>
+                    <li class="divider"></li>
+                    <li class="options"><a>URL Check Result Passed</a></li>
+                    <li class="options"><a>URL Check Result Failed</a></li>
+                </ul>
+            </div>
+            <input type="text" class="form-control" style="display: none">
+        </div>
+        <div class="input-group m-b form-group" style="text-align: right">
+            <div class="input-group-btn">
+                <button data-toggle="dropdown" class="btn btn-white dropdown-toggle" type="button"> Data Check Result <span class="caret"></span></button>
+                <ul class="dropdown-menu">
+                    <li class="options"><a>Data Check Result</a></li>
+                    <li class="divider"></li>
+                    <li class="options"><a>Data Check Result Passed</a></li>
+                    <li class="options"><a>Data Check Result Failed</a></li>
+                </ul>
+            </div>
+            <input type="text" class="form-control" style="display: none">
+        </div>
+        <button type="button" class="btn btn-w-m btn-primary">Search</button>
+    </div>
+
+<!-- Mainly scripts -->
+<script type="text/javascript" src="js/jquery-2.1.1.js"></script>
+<script type="text/javascript" src="js/bootstrap.min.js"></script>
+<script type="text/javascript" src="js/plugins/metisMenu/jquery.metisMenu.js"></script>
+<script type="text/javascript" src="js/plugins/slimscroll/jquery.slimscroll.min.js"></script>
+<script type="text/javascript">
+    $(function() {
+        $('.options').click(function(e){
+            var currentTarget = e.currentTarget;
+            var $ele = $(currentTarget);
+            var $child = $($ele.children()[0]);
+            var $parent = $($ele.parent()[0]);
+            var $pre = $($parent.prev()[0]);
+
+            $pre.text($child.text());
+        });
+    });
+</script>
+
+</body>
+</html>

@@ -218,41 +218,45 @@
                 <div class="col-lg-4">
                     <div class="ibox-title">
                         <h5>Original JSON</h5>
-                        <div class="ibox-tools">
-                            <button id="btn-json-viewer" class="btn btn-info" title="">格式化</button>
-                            <button id="btn-json-viewer1" class="btn btn-info" title="" style="display: none;">重新输入
-                            </button>
+                        <div class="ibox-tools" style="margin-top: -10px">
                             <button id="btn-json-resolver" class="btn btn-info" title="">解析</button>
                         </div>
                     </div>
-                    <textarea class="form-control" id="original" rows="20"
-                              placeholder="Please input JSON data here ..."
-                              style="white-space:nowrap; overflow:scroll;"></textarea>
-                    <pre id="json-renderer" style="display: none; background-color: #ffffff"></pre>
+                    <div class="ibox-content" style="height: 700px">
+                        <style type="text/css" media="screen">
+                            #original {
+                                height: 650px;
+                            }
+                        </style>
+                        <div id="original"></div>
+                    </div>
                 </div>
 
                 <div class="col-lg-4">
                     <div class="ibox-title">
                         <h5>Analysis Result</h5>
-                        <div class="ibox-tools">
+                        <div class="ibox-tools" style="margin-top: -10px">
                             <button id="btn-json-generate-schema" class="btn btn-info" title="">生成 Schema</button>
                         </div>
                     </div>
-                    <pre id="json-analysis-result" style="background-color: #ffffff" aria-rowcount=""></pre>
+                    <pre id="json-analysis-result" style="background-color: #ffffff; height: 700px" aria-rowcount=""></pre>
                 </div>
 
                 <div class="col-lg-4">
                     <div class="ibox-title">
                         <h5>JSON Schema</h5>
-                        <div class="ibox-tools">
-                            <button id="btn-json-schema-copy" class="btn btn-white"
-                                    data-clipboard-target="#json-schema"><i class="fa fa-copy"></i> Copy
-                            </button>
+                        <div class="ibox-tools" style="margin-top: -10px">
+
                         </div>
                     </div>
-                    <!--<pre id="json-schema" contenteditable="true" style="background-color: #ffffff"></pre>-->
-                    <textarea class="form-control" id="json-schema" contenteditable="true" rows="20"
-                              style="background-color: #ffffff; white-space:nowrap; overflow:scroll;"></textarea>
+                    <div class="ibox-content" style="height: 700px">
+                        <style type="text/css" media="screen">
+                            #schema {
+                                height: 650px;
+                            }
+                        </style>
+                        <div id="schema"></div>
+                    </div>
                 </div>
             </div>
             <!-- End -->
@@ -289,6 +293,8 @@
 
 <!-- iCheck -->
 <script src="js/plugins/iCheck/icheck.min.js"></script>
+
+<script type="text/javascript" src="/js/ace/ace.js"></script>
 <script>
     $(document).ready(function () {
         new Clipboard('.btn');
@@ -299,74 +305,58 @@
         });
     });
 
+    var original = ace.edit("original");
+    original.setOptions({
+        mode: 'ace/mode/json',
+        theme: 'ace/theme/twilight',
+        tabSize: 2,
+        wrap: true,
+    })
+
+    var schema = ace.edit("schema");
+    schema.setOptions({
+        mode: 'ace/mode/json',
+        theme: 'ace/theme/twilight',
+        tabSize: 2,
+        wrap: true,
+    })
 
 </script>
 
 <script type="text/javascript">
     $(function() {
-        <!--接收原始 JSON 数据输入-->
-        $('#btn-json-viewer').click(function() {
-            try {
-                var input = eval('(' + $('#original').val() + ')');
-            } catch (error) {
-                return alert("Cannot eval JSON: " + error);
-            }
-
-            $('#original').hide();
-            $('#json-renderer').show();
-
-            $('#btn-json-viewer').hide();
-            $('#btn-json-viewer1').show();
-
-            $('#json-renderer').jsonViewer(input, {collapsed: false, withQuotes: true});
-        });
-
-        $('#btn-json-viewer1').click(function() {
-            $('#original').show();
-            $('#json-renderer').hide();
-
-            $('#btn-json-viewer1').hide();
-            $('#btn-json-viewer').show();
-        });
-
-        <!--失去焦点的时候格式化 JSON 数据-->
-        $('#original').blur(function() {
-            var input;
-            try {
-                if ($('#original').val().length == 0) {
-                        return;
-                }
-
-                input = eval('(' + $('#original').val() + ')');
-            } catch (error) {
-                return alert("Input data is not valid JSON, please check. Error: " + error);
-            }
-
-            $('#original').val(JSON.stringify(input, null, 4));
-        });
-
         var nodeList;
         var json;
 
         <!-- 解析 JSON -->
         $('#btn-json-resolver').click(function() {
+            <!-- 判断JSON输入并格式化 -->
+            var originalEle = ace.edit("original");
+            var json = originalEle.session.getValue();
             try {
-                var input = eval('(' + $('#original').val() + ')');
+                if (json.length == 0) {
+                    alert("Original JSON should not be empty!");
+                    return;
+                }
+
+                eval('(' + json + ')');
             } catch (error) {
-                return alert("Cannot eval JSON: " + error);
+                return alert("Input data is not valid JSON, please check. Error: " + error);
             }
+
+            originalEle.session.setValue(JSON.stringify(eval('(' + json + ')'), null, 4));
 
             <!-- 清空解析结果 -->
             $('#json-analysis-result').empty();
 
             var params = {};
-            json = $('#original').val();
-            params.json = $('#original').val();
+            params.json = json;
 
             $.ajax({
                 type: "POST",
                 url: "/analysisSchema",
-                data: params,
+                data: JSON.stringify(params),
+                contentType : 'application/json',
                 success: function(data) {
                     if(data.length == 0) {
                         alert("The result is empty, please check input!");
@@ -452,6 +442,9 @@
                 return;
             }
 
+            var originalEle = ace.edit("original");
+            var json = originalEle.session.getValue();
+
             var params = {};
             params.nodeList = new Array(result.length);
             for(var index = 0; index < result.length; index++) {
@@ -465,9 +458,9 @@
                 data: JSON.stringify(params),
                 contentType : 'application/json',
                 success: function(data) {
-                    var schema = eval('(' + data + ')');
-                    <!--$('#json-schema').jsonViewer(schema, {collapsed: false, withQuotes: true, withLinks: false});-->
-                    $('#json-schema').val(JSON.stringify(schema, null, 4));
+                    var schemaData = eval('(' + data + ')');
+
+                    schema.setValue(JSON.stringify(schemaData, null, '\t'));
                 },
                 error: function(data) {
                     alert("Failed to generate JSON schema, error: " + data);
@@ -475,25 +468,7 @@
             });
         });
 
-        <!--失去焦点的时候格式化 JSON Schema-->
-        $('#json-schema').blur(function() {
-            var input;
-            try {
-                if ($('#json-schema').val().length == 0) {
-                    return;
-                }
-
-                input = eval('(' + $('#json-schema').val() + ')');
-            } catch (error) {
-                return alert("Input data is not valid JSON, please check. Error: " + error);
-            }
-
-            $('#json-schema').val(JSON.stringify(input, null, 4));
-        });
-
     });
-
-
 </script>
 
 </body>
