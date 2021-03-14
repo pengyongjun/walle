@@ -95,7 +95,7 @@ public class PDFConverter {
         String title = resourceFile.getName();
         title = title.replace(".html", "");
 
-        File outputFile = new File("test");
+        File outputFile = new File("template");
 
         try (BufferedReader bufferedReader = new BufferedReader(new FileReader(resourceFile)); BufferedWriter outWriter = new BufferedWriter(new FileWriter(outputFile))) {
             Set<String> catalog = new HashSet<>();

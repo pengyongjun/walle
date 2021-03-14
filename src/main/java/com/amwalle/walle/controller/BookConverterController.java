@@ -72,10 +72,12 @@ public class BookConverterController {
             writer.write("处理出错了！");
             writer.write(e.getMessage());
             writer.flush();
+            outFile.deleteOnExit();
             return;
         }
 
         writer.flush();
+        outFile.deleteOnExit();
         logger.info("文件处理成功！");
     }
 }
