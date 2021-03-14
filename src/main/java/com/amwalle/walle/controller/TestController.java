@@ -81,4 +81,11 @@ public class TestController {
     public void atsTask(HttpServletRequest request, HttpServletResponse response) {
         logger.info(String.valueOf(request.getParameterMap()));
     }
+
+    @RequestMapping(value = "/converter", method = RequestMethod.GET)
+    public ModelAndView convert(Model model) {
+        logger.info(">>>>>>>>>>>> convert >>>>>>>>>>>");
+        return new ModelAndView("converter");
+    }
+
 }

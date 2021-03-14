@@ -1,20 +1,26 @@
 package com.amwalle.walle.util;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.util.StringUtils;
 
 import java.io.*;
-import java.util.*;
+import java.util.HashSet;
+import java.util.Scanner;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class PDFConverter {
+    private static final Logger logger = LoggerFactory.getLogger(PDFConverter.class);
 
     public static void main(String[] args) throws IOException {
         Scanner scanner = new Scanner(System.in);
         System.out.println("请输入要转换的文件路径： ");
         String filePath = scanner.nextLine();
         System.out.println(filePath);
-        convert(filePath);
+        File file = new File(filePath);
+        File out = convert(file);
     }
 
     public enum HeaderLevel {
@@ -81,28 +87,24 @@ public class PDFConverter {
         }
     }
 
-    public static void convert(String filePath) throws IOException {
-        File file = new File(filePath);
-        if (!file.isFile() || !file.canRead() || !file.getName().endsWith(".html")) {
+    public static File convert(File resourceFile) throws IOException {
+        if (!resourceFile.isFile() || !resourceFile.canRead() || !resourceFile.getName().endsWith(".html")) {
             System.out.println("请输入正确的html文件路径，并保证文件可读！");
         }
 
-        String title = file.getName();
+        String title = resourceFile.getName();
         title = title.replace(".html", "");
 
-        File outFile = new File(filePath.replace(".html", "1.html"));
-        if (outFile.exists()) {
-            outFile.delete();
-            outFile.createNewFile();
-        }
+        File outputFile = new File("test");
 
-        try (Scanner scanner = new Scanner(file, "UTF-8"); BufferedWriter outWriter = new BufferedWriter(new FileWriter(outFile))) {
+        try (BufferedReader bufferedReader = new BufferedReader(new FileReader(resourceFile)); BufferedWriter outWriter = new BufferedWriter(new FileWriter(outputFile))) {
             Set<String> catalog = new HashSet<>();
 
             StringBuffer output = new StringBuffer();
             boolean isIndentationNeeded = false;
             int count = 0;
-            while (scanner.hasNextLine()) {
+            String line;
+            while ((line = bufferedReader.readLine()) != null) {
                 count++;
                 // 有些文件太大，需要在中间存一下文件
                 if (count >= 10000) {
@@ -110,8 +112,6 @@ public class PDFConverter {
                     count = 0;
                     output.delete(0, output.length());
                 }
-
-                String line = scanner.nextLine();
 
                 // 目录前面的内容（封面、版权等）
                 if (catalog.isEmpty() && !line.startsWith("<p class=\"calibre1\"><a href=\"")) {
@@ -202,14 +202,13 @@ public class PDFConverter {
                 output.append(line).append("\n");
             }
             outWriter.append(output);
-
-            System.out.println("********************************************");
-            System.out.println("Done! 生成的新文件路径： ");
-            System.out.println(outFile.getPath());
+            outWriter.flush();
         } catch (FileNotFoundException e) {
-            System.out.println("File convert failed!");
-            e.printStackTrace();
+            logger.info("出错了！");
+            logger.info(e.getMessage());
         }
+
+        return outputFile;
     }
 
     private static String removeSpace(String input) {
